@@ -2,8 +2,9 @@
   "name": "shipwizard",
   "displayName": "ShipWizard",
   "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "dr-opensource",
+  "author": "Dr. Shubham Kashyap",
   "license": "MIT",
   "icon": "assets/icon.png",
   "repository": {
@@ -65,17 +66,17 @@
       },
       {
         "command": "shipwizard.activateLicense",
-        "title": "ShipWizard: Activate Pro License ($9.99 Lifetime)",
+        "title": "ShipWizard: Activate Pro License",
         "category": "ShipWizard"
       },
       {
         "command": "shipwizard.buyLicense",
-        "title": "ShipWizard: Get Pro Lifetime License ($9.99)",
+        "title": "ShipWizard: Get Pro Lifetime License",
         "category": "ShipWizard"
       },
       {
         "command": "shipwizard.openWebsite",
-        "title": "ShipWizard: Visit Website (shipwizard.taqnik.in)",
+        "title": "ShipWizard: Visit Documentation Website",
         "category": "ShipWizard"
       }
     ],
