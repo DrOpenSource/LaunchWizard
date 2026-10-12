@@ -281,7 +281,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
       margin: 10px 0;
     }
     .qr-container svg {
-      max-width: 180px;
+      max-width: 220px;
       height: auto;
       border-radius: 8px;
     }

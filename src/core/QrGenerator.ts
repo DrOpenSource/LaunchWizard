@@ -1,22 +1,30 @@
+import qrcode from 'qrcode-generator';
+
 /**
  * In-IDE SVG QR Code Generator
- * Generates crisp, scannable SVGs and Data URLs without external network calls or native binaries.
+ * Produces standards-compliant QR codes (ISO/IEC 18004) that phone cameras can scan.
+ * Runs fully offline: no network calls or native binaries.
  */
 export class QrGenerator {
+  /** Quiet zone (blank border) in modules. The QR spec requires 4 for reliable scanning. */
+  private static readonly QUIET_ZONE = 4;
+
   /**
    * Generates a clean SVG string for a given URL or text string.
+   * Default colours are dark-on-light: some phone scanners cannot read inverted codes.
    */
-  public static generateSvg(text: string, size = 200, fgColor = '#ffffff', bgColor = '#18181b'): string {
+  public static generateSvg(text: string, size = 200, fgColor = '#000000', bgColor = '#ffffff'): string {
     const matrix = this.generateMatrix(text);
-    const moduleCount = matrix.length;
-    const cellSize = size / moduleCount;
+    const quiet = this.QUIET_ZONE;
+    const totalModules = matrix.length + quiet * 2;
+    const cellSize = size / totalModules;
 
     let rects = '';
-    for (let r = 0; r < moduleCount; r++) {
-      for (let c = 0; c < moduleCount; c++) {
+    for (let r = 0; r < matrix.length; r++) {
+      for (let c = 0; c < matrix.length; c++) {
         if (matrix[r][c]) {
-          const x = (c * cellSize).toFixed(2);
-          const y = (r * cellSize).toFixed(2);
+          const x = ((c + quiet) * cellSize).toFixed(2);
+          const y = ((r + quiet) * cellSize).toFixed(2);
           const s = (cellSize + 0.1).toFixed(2); // minor overlap to avoid subpixel lines
           rects += `<rect x="${x}" y="${y}" width="${s}" height="${s}" fill="${fgColor}"/>`;
         }
@@ -25,9 +33,7 @@ export class QrGenerator {
 
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges">
   <rect width="${size}" height="${size}" fill="${bgColor}" rx="12"/>
-  <g transform="translate(12, 12) scale(${((size - 24) / size).toFixed(4)})">
-    ${rects}
-  </g>
+  ${rects}
 </svg>`;
   }
 
@@ -41,90 +47,23 @@ export class QrGenerator {
   }
 
   /**
-   * Deterministic matrix generator. Uses standard 21x21 QR Grid layout with Finder Patterns,
-   * Timing Patterns, and data interleaving for reliable mobile scanning.
+   * Encodes text as a QR module matrix (true = dark module), without the quiet zone.
+   * Uses automatic version selection and error correction level M (~15% recovery).
    */
   public static generateMatrix(text: string): boolean[][] {
-    const size = 25; // Version 2 grid
-    const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-    const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+    const qr = qrcode(0, 'M');
+    qr.addData(text, 'Byte');
+    qr.make();
 
-    // 1. Finder Patterns (Top-Left, Top-Right, Bottom-Left)
-    this.addFinderPattern(matrix, reserved, 0, 0);
-    this.addFinderPattern(matrix, reserved, size - 7, 0);
-    this.addFinderPattern(matrix, reserved, 0, size - 7);
-
-    // 2. Timing Patterns
-    for (let i = 8; i < size - 8; i++) {
-      const bit = i % 2 === 0;
-      matrix[6][i] = bit;
-      reserved[6][i] = true;
-      matrix[i][6] = bit;
-      reserved[i][6] = true;
-    }
-
-    // 3. Dark module
-    matrix[size - 8][8] = true;
-    reserved[size - 8][8] = true;
-
-    // 4. Encode text bytes deterministically into remaining unreserved cells
-    const bytes = Buffer.from(text, 'utf-8');
-    let byteIdx = 0;
-    let bitIdx = 0;
-
-    for (let c = size - 1; c > 0; c -= 2) {
-      if (c === 6) c--; // Skip vertical timing column
-      for (let count = 0; count < size; count++) {
-        const r = (Math.floor(c / 2) % 2 === 0) ? count : size - 1 - count;
-        for (let colOffset = 0; colOffset < 2; colOffset++) {
-          const col = c - colOffset;
-          if (!reserved[r][col]) {
-            let bit = false;
-            if (byteIdx < bytes.length) {
-              bit = ((bytes[byteIdx] >> (7 - bitIdx)) & 1) === 1;
-              bitIdx++;
-              if (bitIdx === 8) {
-                bitIdx = 0;
-                byteIdx++;
-              }
-            } else {
-              // Fill remainder with standard alternating pattern
-              bit = (r + col) % 3 === 0;
-            }
-
-            // Apply standard mask (r + col) % 2 === 0
-            const mask = (r + col) % 2 === 0;
-            matrix[r][col] = mask ? !bit : bit;
-          }
-        }
+    const count = qr.getModuleCount();
+    const matrix: boolean[][] = [];
+    for (let r = 0; r < count; r++) {
+      const row: boolean[] = [];
+      for (let c = 0; c < count; c++) {
+        row.push(qr.isDark(r, c));
       }
+      matrix.push(row);
     }
-
     return matrix;
-  }
-
-  private static addFinderPattern(
-    matrix: boolean[][],
-    reserved: boolean[][],
-    startRow: number,
-    startCol: number
-  ): void {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        const row = startRow + r;
-        const col = startCol + c;
-        reserved[row][col] = true;
-
-        if (
-          r === 0 || r === 6 ||
-          c === 0 || c === 6 ||
-          (r >= 2 && r <= 4 && c >= 2 && c <= 4)
-        ) {
-          matrix[row][col] = true;
-        } else {
-          matrix[row][col] = false;
-        }
-      }
-    }
   }
 }
