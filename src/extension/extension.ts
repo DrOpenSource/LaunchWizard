@@ -96,6 +96,23 @@ export function activate(context: vscode.ExtensionContext): void {
 
     if (!inputPort) return;
     const port = Number.parseInt(inputPort, 10);
+    if (Number.isNaN(port) || port <= 0 || port > 65535) {
+      vscode.window.showErrorMessage(`ShipWizard: Invalid port number "${inputPort}".`);
+      return;
+    }
+
+    // In-flight health ping: verify local dev server is responding before launching tunnel
+    const isReachable = await TunnelManager.checkLocalPortReachable(port);
+    if (!isReachable) {
+      const choice = await vscode.window.showWarningMessage(
+        `ShipWizard: No active dev server was detected on port ${port}. Please make sure your dev server (e.g. npm run dev) is running.`,
+        'Launch Anyway',
+        'Cancel'
+      );
+      if (choice !== 'Launch Anyway') {
+        return;
+      }
+    }
 
     vscode.window.withProgress(
       {

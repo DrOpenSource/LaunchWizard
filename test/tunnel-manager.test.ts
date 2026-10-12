@@ -62,6 +62,20 @@ describe('TunnelManager & QrGenerator', () => {
     expect(typeof isAvailable).toBe('boolean');
   });
 
+  it('detects when local port is reachable vs unreachable', async () => {
+    const unreachable = await TunnelManager.checkLocalPortReachable(49999);
+    expect(unreachable).toBe(false);
+
+    const server = http.createServer((_req, res) => res.end('ok'));
+    await new Promise<void>((resolve) => server.listen(49998, resolve));
+    try {
+      const reachable = await TunnelManager.checkLocalPortReachable(49998);
+      expect(reachable).toBe(true);
+    } finally {
+      server.close();
+    }
+  });
+
   it('starts and stops a live localtunnel when cloudflared is unavailable', async () => {
     const server = http.createServer((_req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/plain' });

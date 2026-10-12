@@ -1,5 +1,6 @@
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
 import * as http from 'node:http';
+import * as net from 'node:net';
 import { QrGenerator } from './QrGenerator.js';
 import type { TunnelInfo } from '../shared/types.js';
 
@@ -62,7 +63,7 @@ export class TunnelManager {
       this.stopTunnel();
     }
 
-    const { port, timeoutMs = 25000 } = options;
+    const { port, timeoutMs = 35000 } = options;
 
     const preferredProvider: 'cloudflare' | 'localtunnel' =
       options.provider || (this.isCloudflaredAvailable() ? 'cloudflare' : 'localtunnel');
@@ -262,16 +263,25 @@ export class TunnelManager {
    */
   public static checkLocalPortReachable(port: number): Promise<boolean> {
     return new Promise((resolve) => {
-      const req = http.get(`http://127.0.0.1:${port}`, () => {
+      const socket = new net.Socket();
+      socket.setTimeout(1200);
+
+      socket.on('connect', () => {
+        socket.destroy();
         resolve(true);
       });
-      req.on('error', () => {
+
+      socket.on('timeout', () => {
+        socket.destroy();
         resolve(false);
       });
-      req.setTimeout(1200, () => {
-        req.destroy();
+
+      socket.on('error', () => {
+        socket.destroy();
         resolve(false);
       });
+
+      socket.connect(port, '127.0.0.1');
     });
   }
 }
