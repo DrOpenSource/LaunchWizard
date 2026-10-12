@@ -24,13 +24,13 @@
 ## 🖼️ Media Assets to Upload
 
 1. **Cover Image (16:9)**:
-   - File path: [`assets/gumroad_cover.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/gumroad_cover.jpg)
-   - Dimensions: 1280 × 720 (High-res dark aesthetic with neon rocket & preview cards)
+   - File path: [`assets/gumroad_cover.png`](../assets/gumroad_cover.png)
+   - Dimensions: 2560 × 1440 (2× of the 1280 × 720 spec; dark glass cards, rocket emblem, scannable QR to the site, $9.99 price card). Source: `assets/gumroad-src/cover.html`
 2. **Thumbnail Image (1:1)**:
-   - File path: [`assets/gumroad_thumbnail.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/gumroad_thumbnail.jpg)
-   - Dimensions: 600 × 600 (Square app card with glowing rocket emblem)
+   - File path: [`assets/gumroad_thumbnail.png`](../assets/gumroad_thumbnail.png)
+   - Dimensions: 1200 × 1200 (2× of the 600 × 600 spec; rocket emblem, name and $9.99 Lifetime badge). Source: `assets/gumroad-src/thumbnail.html`
 3. **App Icon**:
-   - File path: [`assets/icon.png`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/icon.png)
+   - File path: [`assets/icon.png`](../assets/icon.png)
 
 ---
 

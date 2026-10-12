@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LaunchWizard — Gumroad thumbnail (600×600)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 600px; height: 600px; overflow: hidden; background: #060913; }
+  body {
+    position: relative;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #f2f5ff;
+    background:
+      radial-gradient(420px 380px at 50% 38%, rgba(88, 101, 242, .38), transparent 70%),
+      radial-gradient(300px 260px at 0% 100%, rgba(139, 61, 255, .26), transparent 70%),
+      radial-gradient(300px 260px at 100% 0%, rgba(34, 211, 238, .14), transparent 70%),
+      #060913;
+  }
+  .glow { position: absolute; left: 50%; top: 262px; width: 560px; height: 560px; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(120, 130, 255, .55), rgba(120, 130, 255, 0) 62%); }
+  .emblem {
+    position: absolute; left: 50%; top: 262px; transform: translate(-50%, -50%);
+    width: 300px; height: 300px; border-radius: 52px; overflow: hidden;
+    box-shadow: 0 22px 50px rgba(0,0,0,.5);
+  }
+  .emblem img {
+    position: absolute; max-width: none;
+    width: calc(300px * 1024 / 800);
+    left: calc(-300px * 112 / 800);
+    top: calc(-300px * 112 / 800);
+  }
+  .name-row {
+    position: absolute; left: 0; right: 0; top: 462px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+  }
+  .name { font-size: 54px; font-weight: 800; letter-spacing: -1px; }
+  .name span {
+    background: linear-gradient(90deg, #7aa2ff, #b184ff 60%, #5ee1f5);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .badge {
+    text-align: center; line-height: 1.05; padding: 7px 12px; border-radius: 12px;
+    background: linear-gradient(160deg, rgba(250, 204, 21, .28), rgba(34, 197, 94, .26));
+    border: 1px solid rgba(250, 204, 21, .55);
+    box-shadow: 0 0 22px rgba(250, 204, 21, .18);
+  }
+  .badge b { display: block; font-size: 22px; color: #fde047; font-weight: 800; }
+  .badge small { font-size: 13px; color: #ecfccb; font-weight: 600; }
+  .tag { position: absolute; left: 0; right: 0; top: 540px; text-align: center; font-size: 19px; color: #aebbe3; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="emblem"><img src="../icon.png" alt=""></div>
+  <div class="name-row">
+    <div class="name">Launch<span>Wizard</span></div>
+    <div class="badge"><b>$9.99</b><small>Lifetime</small></div>
+  </div>
+  <div class="tag">Pre-flight checks &amp; 1-click preview links</div>
+</body>
+</html>
