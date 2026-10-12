@@ -32,4 +32,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO EVENT SHAL
 
 ## Support & Inquiries
 Website: [launchwizard.taqnik.in](https://launchwizard.taqnik.in)  
-Gumroad Store: [kashyapster867.gumroad.com/l/shipwizard](https://kashyapster867.gumroad.com/l/shipwizard)
+Gumroad Store: [kashyapster867.gumroad.com/l/launchwizard](https://kashyapster867.gumroad.com/l/launchwizard)
