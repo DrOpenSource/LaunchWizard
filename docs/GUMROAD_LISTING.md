@@ -1,6 +1,6 @@
 # 🛍️ LaunchWizard Pro — Gumroad Media Kit & Listing Copy
 
-> Use this exact copy and media assets to configure your Gumroad listing at **https://kashyapster867.gumroad.com/l/launchwizard**.
+> Use this exact copy and media assets to configure your Gumroad listing at **https://kashyapster867.gumroad.com/l/shipwizard**.
 
 ---
 
