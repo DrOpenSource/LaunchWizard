@@ -15,6 +15,7 @@ scripts/**
 wrangler.jsonc
 *.html
 EULA.md
-PRIVACY.md
 AGENTS.md
 assets/gumroad*
+assets/*.svg
+extension/**

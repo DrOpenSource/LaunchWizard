@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, execSync, type ChildProcess } from 'node:child_process';
 import * as http from 'node:http';
 import { QrGenerator } from './QrGenerator.js';
 import type { TunnelInfo } from '../shared/types.js';
@@ -12,6 +12,19 @@ export interface TunnelOptions {
 export class TunnelManager {
   private static activeProcess: ChildProcess | null = null;
   private static currentTunnel: TunnelInfo | null = null;
+
+  /**
+   * Checks whether the cloudflared binary is installed and present in system PATH.
+   */
+  public static isCloudflaredAvailable(): boolean {
+    try {
+      const cmd = process.platform === 'win32' ? 'where.exe cloudflared' : 'which cloudflared';
+      execSync(cmd, { stdio: 'ignore', timeout: 2000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   /**
    * Returns current active tunnel information, or idle status if none running.
@@ -36,7 +49,7 @@ export class TunnelManager {
   }
 
   /**
-   * Starts a zero-config tunnel pointing to localPort (default Cloudflare Quick Tunnel).
+   * Starts a zero-config tunnel pointing to localPort (Cloudflare Quick Tunnel or Localtunnel fallback).
    */
   public static async startTunnel(options: TunnelOptions): Promise<TunnelInfo> {
     // If a tunnel is already active on the same port, return it
@@ -51,29 +64,54 @@ export class TunnelManager {
 
     const { port, timeoutMs = 25000 } = options;
 
+    const preferredProvider: 'cloudflare' | 'localtunnel' =
+      options.provider || (this.isCloudflaredAvailable() ? 'cloudflare' : 'localtunnel');
+
+    return this.spawnTunnelWithProvider(preferredProvider, port, timeoutMs, !options.provider);
+  }
+
+  private static launchProcess(provider: 'cloudflare' | 'localtunnel', port: number): ChildProcess {
+    if (provider === 'cloudflare') {
+      return spawn('cloudflared', ['tunnel', '--url', `http://127.0.0.1:${port}`], {
+        shell: true,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
+
+    // Localtunnel via npx (zero account, zero local installation required)
+    const cmd = `npx --yes localtunnel --port ${port}`;
+    return spawn(cmd, {
+      shell: true,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  }
+
+  private static spawnTunnelWithProvider(
+    provider: 'cloudflare' | 'localtunnel',
+    port: number,
+    timeoutMs: number,
+    allowFallback: boolean
+  ): Promise<TunnelInfo> {
     return new Promise<TunnelInfo>((resolve, reject) => {
       let isResolved = false;
+      let stderrBuffer = '';
+
       const timeout = setTimeout(() => {
         if (!isResolved) {
           isResolved = true;
           this.stopTunnel();
-          reject(new Error(`Timed out waiting for tunnel to start after ${timeoutMs}ms.`));
+          reject(new Error(`Timed out waiting for ${provider} tunnel to start after ${timeoutMs}ms.`));
         }
       }, timeoutMs);
 
       try {
-        // Attempt Cloudflare Quick Tunnel first
-        const child = spawn('cloudflared', ['tunnel', '--url', `http://127.0.0.1:${port}`], {
-          shell: true,
-          stdio: ['pipe', 'pipe', 'pipe'],
-        });
-
+        const child = this.launchProcess(provider, port);
         this.activeProcess = child;
 
         this.currentTunnel = {
           url: '',
           localPort: port,
-          provider: 'cloudflare',
+          provider,
           qrCodeSvg: '',
           startedAt: Date.now(),
           uptimeSeconds: 0,
@@ -93,7 +131,7 @@ export class TunnelManager {
             this.currentTunnel = {
               url: capturedUrl,
               localPort: port,
-              provider: 'cloudflare',
+              provider,
               qrCodeSvg,
               startedAt: Date.now(),
               uptimeSeconds: 0,
@@ -105,14 +143,26 @@ export class TunnelManager {
         };
 
         child.stdout?.on('data', handleOutput);
-        child.stderr?.on('data', handleOutput);
+        child.stderr?.on('data', (data: Buffer) => {
+          stderrBuffer += data.toString();
+          handleOutput(data);
+        });
 
         child.on('error', (err) => {
           if (!isResolved) {
             clearTimeout(timeout);
             isResolved = true;
             this.currentTunnel = null;
-            reject(new Error(`Failed to spawn tunnel process: ${err.message}`));
+            this.activeProcess = null;
+
+            if (allowFallback && provider === 'cloudflare') {
+              this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+                .then(resolve)
+                .catch(reject);
+              return;
+            }
+
+            reject(new Error(`Failed to spawn ${provider} tunnel process: ${err.message}`));
           }
         });
 
@@ -122,19 +172,37 @@ export class TunnelManager {
           if (!isResolved) {
             clearTimeout(timeout);
             isResolved = true;
-            reject(new Error(`Tunnel process exited prematurely with code ${code}.`));
+
+            if (allowFallback && provider === 'cloudflare') {
+              this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+                .then(resolve)
+                .catch(reject);
+              return;
+            }
+
+            const errTail = stderrBuffer.trim() ? `: ${stderrBuffer.trim().split('\n').pop()}` : '';
+            reject(new Error(`Tunnel process exited prematurely with code ${code}${errTail}.`));
           }
         });
       } catch (err) {
         clearTimeout(timeout);
         this.currentTunnel = null;
-        reject(err);
+        this.activeProcess = null;
+
+        if (allowFallback && provider === 'cloudflare') {
+          this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+
+        reject(err instanceof Error ? err : new Error(String(err)));
       }
     });
   }
 
   /**
-   * Gracefully stops the active tunnel.
+   * Gracefully stops the active tunnel and terminates child process tree.
    */
   public static stopTunnel(): boolean {
     if (!this.activeProcess) {
@@ -145,7 +213,15 @@ export class TunnelManager {
     }
 
     try {
-      this.activeProcess.kill();
+      if (process.platform === 'win32' && this.activeProcess.pid) {
+        try {
+          execSync(`taskkill /pid ${this.activeProcess.pid} /T /F`, { stdio: 'ignore' });
+        } catch {
+          this.activeProcess.kill();
+        }
+      } else {
+        this.activeProcess.kill();
+      }
       this.activeProcess = null;
       if (this.currentTunnel) {
         this.currentTunnel.status = 'stopped';

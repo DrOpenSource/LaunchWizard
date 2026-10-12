@@ -340,7 +340,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
     </div>
     <div id="tunnelContent">
       <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">
-        1-click secure Cloudflare tunnel to test your app on your phone or send to clients.
+        1-click secure HTTPS tunnel to test your app on your phone or send to clients.
       </p>
       <button id="startTunnelBtn" class="btn">🌐 Launch Live Share Link</button>
     </div>
@@ -453,12 +453,12 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
       } else if (state.tunnel && state.tunnel.status === 'starting') {
         tunnelBox.innerHTML =
           '<div class="status-banner" style="background: rgba(10, 111, 224, 0.12); color: var(--accent);">' +
-            '<span>⏳ Connecting Cloudflare edge tunnel...</span>' +
+            '<span>⏳ Connecting secure edge tunnel...</span>' +
           '</div>';
       } else {
         tunnelBox.innerHTML =
           '<p style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">' +
-            '1-click secure Cloudflare tunnel to test your app on your phone or send to clients.' +
+            '1-click secure HTTPS tunnel to test your app on your phone or send to clients.' +
           '</p>' +
           '<button id="startTunnelBtn" class="btn">🌐 Launch Live Share Link</button>';
 

@@ -2,7 +2,7 @@
   "name": "shipwizard",
   "displayName": "ShipWizard",
   "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "pricing": "Free",
   "publisher": "dr-opensource",
   "author": "Dr. Shubham Kashyap",
@@ -86,7 +86,7 @@
         {
           "id": "shipwizard-deck",
           "title": "ShipWizard",
-          "icon": "assets/icon.svg"
+          "icon": "$(rocket)"
         }
       ]
     },
@@ -108,7 +108,7 @@
     "watch": "node esbuild.config.mjs --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "package": "npx @vscode/vsce package --no-dependencies"
+    "package": "npx -y @vscode/vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",

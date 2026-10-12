@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { TunnelManager } from '../src/core/TunnelManager.js';
 import { QrGenerator } from '../src/core/QrGenerator.js';
 
+import * as http from 'node:http';
+
 describe('TunnelManager & QrGenerator', () => {
   it('extracts Cloudflare Quick Tunnel URLs from stdout stream', () => {
     const output = [
@@ -54,4 +56,33 @@ describe('TunnelManager & QrGenerator', () => {
     expect(status.url).toBe('');
     expect(status.localPort).toBe(0);
   });
+
+  it('checks if cloudflared binary is available returning boolean', () => {
+    const isAvailable = TunnelManager.isCloudflaredAvailable();
+    expect(typeof isAvailable).toBe('boolean');
+  });
+
+  it('starts and stops a live localtunnel when cloudflared is unavailable', async () => {
+    const server = http.createServer((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ShipWizard OK');
+    });
+
+    await new Promise<void>((resolve) => server.listen(48291, resolve));
+
+    try {
+      const tunnel = await TunnelManager.startTunnel({ port: 48291, timeoutMs: 15000 });
+      expect(tunnel.status).toBe('active');
+      expect(tunnel.url).toMatch(/^https:\/\//);
+      expect(tunnel.localPort).toBe(48291);
+      expect(tunnel.qrCodeSvg).toContain('<svg');
+
+      const stopped = TunnelManager.stopTunnel();
+      expect(stopped).toBe(true);
+      expect(TunnelManager.getStatus().status).toBe('idle');
+    } finally {
+      TunnelManager.stopTunnel();
+      server.close();
+    }
+  }, 25000);
 });

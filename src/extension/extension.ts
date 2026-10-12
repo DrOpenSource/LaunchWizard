@@ -124,6 +124,8 @@ export function activate(context: vscode.ExtensionContext): void {
             await vscode.commands.executeCommand('shipwizard.showMobileQr');
           }
         } catch (err) {
+          statusBar?.updateTunnelState();
+          await deckProvider?.syncDeckState();
           vscode.window.showErrorMessage(
             `ShipWizard Preview Error: ${err instanceof Error ? err.message : String(err)}`
           );
