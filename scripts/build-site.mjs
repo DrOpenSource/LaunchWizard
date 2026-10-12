@@ -20,7 +20,8 @@ const filesToCopy = [
   'EULA.md',
   'PRIVACY.md',
   'LICENSE',
-  'shipwizard-0.1.0.vsix'
+  'shipwizard-0.1.0.vsix',
+  'shipwizard-0.1.1.vsix'
 ];
 
 for (const file of filesToCopy) {

@@ -2,7 +2,7 @@
   "name": "shipwizard",
   "displayName": "ShipWizard",
   "description": "The 'Get It Live' Pre-Flight Engine & 1-Click Shareable Tunnel for vibe coders. Catch production TypeScript & bundler build errors before deploying to Vercel/Cloudflare, and get an instant mobile-friendly test link.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "dr-opensource",
   "license": "MIT",
   "icon": "assets/icon.png",
