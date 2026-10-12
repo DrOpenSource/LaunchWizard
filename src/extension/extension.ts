@@ -81,69 +81,75 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  // 6. Command: Start Tunnel
-  context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.startTunnel', async () => {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      const projectRoot = workspaceFolders?.[0]?.uri.fsPath;
-      const frameworkInfo = projectRoot ? FrameworkDetector.detect(projectRoot) : null;
-      const defaultPort = frameworkInfo?.defaultPort ?? 3000;
+  // 6. Command: Start Preview / Tunnel
+  const handleStartPreview = async () => {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    const projectRoot = workspaceFolders?.[0]?.uri.fsPath;
+    const frameworkInfo = projectRoot ? FrameworkDetector.detect(projectRoot) : null;
+    const defaultPort = frameworkInfo?.defaultPort ?? 3000;
 
-      const inputPort = await vscode.window.showInputBox({
-        title: 'ShipWizard: Launch Instant Shareable Link',
-        prompt: `Enter local dev server port (detected ${frameworkInfo?.displayName ?? 'default'}: ${defaultPort})`,
-        value: String(defaultPort),
-      });
+    const inputPort = await vscode.window.showInputBox({
+      title: 'ShipWizard: Launch Instant Shareable Link',
+      prompt: `Enter local dev server port (detected ${frameworkInfo?.displayName ?? 'default'}: ${defaultPort})`,
+      value: String(defaultPort),
+    });
 
-      if (!inputPort) return;
-      const port = Number.parseInt(inputPort, 10);
+    if (!inputPort) return;
+    const port = Number.parseInt(inputPort, 10);
 
-      vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: `ShipWizard: Launching Cloudflare Quick Tunnel on port ${port}...`,
-          cancellable: false,
-        },
-        async () => {
-          try {
-            const tunnel = await TunnelManager.startTunnel({ port });
-            statusBar?.updateTunnelState();
-            await deckProvider?.syncDeckState();
+    vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `ShipWizard: Launching live preview link on port ${port}...`,
+        cancellable: false,
+      },
+      async () => {
+        try {
+          const tunnel = await TunnelManager.startTunnel({ port });
+          statusBar?.updateTunnelState();
+          await deckProvider?.syncDeckState();
 
-            const action = await vscode.window.showInformationMessage(
-              `🟢 Live test link is ready: ${tunnel.url}`,
-              'Copy URL',
-              'Open Browser',
-              'Show Mobile QR'
-            );
+          const action = await vscode.window.showInformationMessage(
+            `🟢 Live test link is ready: ${tunnel.url}`,
+            'Copy URL',
+            'Open Browser',
+            'Show Mobile QR'
+          );
 
-            if (action === 'Copy URL') {
-              await vscode.env.clipboard.writeText(tunnel.url);
-            } else if (action === 'Open Browser') {
-              await vscode.env.openExternal(vscode.Uri.parse(tunnel.url));
-            } else if (action === 'Show Mobile QR') {
-              await vscode.commands.executeCommand('shipwizard.showMobileQr');
-            }
-          } catch (err) {
-            vscode.window.showErrorMessage(
-              `ShipWizard Tunnel Error: ${err instanceof Error ? err.message : String(err)}`
-            );
+          if (action === 'Copy URL') {
+            await vscode.env.clipboard.writeText(tunnel.url);
+          } else if (action === 'Open Browser') {
+            await vscode.env.openExternal(vscode.Uri.parse(tunnel.url));
+          } else if (action === 'Show Mobile QR') {
+            await vscode.commands.executeCommand('shipwizard.showMobileQr');
           }
+        } catch (err) {
+          vscode.window.showErrorMessage(
+            `ShipWizard Preview Error: ${err instanceof Error ? err.message : String(err)}`
+          );
         }
-      );
-    })
+      }
+    );
+  };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipwizard.startPreview', handleStartPreview),
+    vscode.commands.registerCommand('shipwizard.startTunnel', handleStartPreview)
   );
 
-  // 7. Command: Stop Tunnel
+  // 7. Command: Stop Preview / Tunnel
+  const handleStopPreview = () => {
+    const stopped = TunnelManager.stopTunnel();
+    statusBar?.updateTunnelState();
+    deckProvider?.syncDeckState();
+    if (stopped) {
+      vscode.window.showInformationMessage('🛑 ShipWizard: Live preview link stopped.');
+    }
+  };
+
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.stopTunnel', () => {
-      const stopped = TunnelManager.stopTunnel();
-      statusBar?.updateTunnelState();
-      deckProvider?.syncDeckState();
-      if (stopped) {
-        vscode.window.showInformationMessage('🛑 ShipWizard: Live preview tunnel stopped.');
-      }
-    })
+    vscode.commands.registerCommand('shipwizard.stopPreview', handleStopPreview),
+    vscode.commands.registerCommand('shipwizard.stopTunnel', handleStopPreview)
   );
 
   // 8. Command: Auto-Heal All Blockers
@@ -186,11 +192,11 @@ export function activate(context: vscode.ExtensionContext): void {
       const tunnel = TunnelManager.getStatus();
       if (tunnel.status !== 'active') {
         const launch = await vscode.window.showInformationMessage(
-          'No active tunnel running. Would you like to launch one now?',
-          'Launch Tunnel'
+          'No active live preview running. Would you like to launch one now?',
+          'Launch Preview'
         );
-        if (launch === 'Launch Tunnel') {
-          await vscode.commands.executeCommand('shipwizard.startTunnel');
+        if (launch === 'Launch Preview') {
+          await vscode.commands.executeCommand('shipwizard.startPreview');
         }
         return;
       }
@@ -203,8 +209,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('shipwizard.activateLicense', async () => {
       const key = await vscode.window.showInputBox({
-        title: 'Activate ShipWizard Pro Lifetime ($9.99)',
-        prompt: 'Enter your Gumroad license key (or SHIP-PRO-XXXX-XXXX)',
+        title: 'Activate ShipWizard Pro Lifetime',
+        prompt: 'Enter your Pro License Key (or SHIP-PRO-XXXX-XXXX)',
         ignoreFocusOut: true,
       });
 
@@ -224,7 +230,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // 11. Command: Buy Pro License
   context.subscriptions.push(
     vscode.commands.registerCommand('shipwizard.buyLicense', async () => {
-      await vscode.env.openExternal(vscode.Uri.parse('https://kashyapster867.gumroad.com/l/shipwizard'));
+      await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
     })
   );
 

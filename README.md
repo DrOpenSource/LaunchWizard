@@ -17,7 +17,7 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 
 **ShipWizard gives you complete peace of mind before you ship:**
 * **3-Second Pre-Flight Radar**: Non-destructive dry runs catch every build blocker locally before you push to git.
-* **1-Click Free Cloudflare Preview**: Instant secure HTTPS preview link (`trycloudflare.com`) with zero configuration, no accounts, and no credit cards.
+* **1-Click Free Cloudflare Preview**: Instant secure HTTPS preview link with zero configuration, no accounts, and no credit cards.
 * **In-IDE Mobile QR Code**: Scan your screen with your phone camera to test live apps on your device in seconds.
 * **Plain-English Error Translator**: Translates cryptic compiler codes into friendly, solvable cards.
 * **Deterministic 1-Click Auto-Healer**: Safely fixes missing `'use client'`, environment variables (`NEXT_PUBLIC_`), and import paths with full rollback safety.
@@ -29,10 +29,10 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 ### 1. 🔍 The "Get It Live" Pre-Flight Engine
 * **Framework Autodetection**: Automatically detects Next.js, Vite, Remix, Astro, SvelteKit, Nuxt, and Vanilla TypeScript.
 * **Non-Destructive Compiler Dry Run**: Executes `tsc --noEmit` and static bundle verification in memory.
-* **Secret Leak & Prefix Shield**: Catches client components accessing environment variables without `NEXT_PUBLIC_` or `VITE_` prefixes before production builds fail.
+* **Client-Side Prefix Shield**: Catches client components accessing environment variables without `NEXT_PUBLIC_` or `VITE_` prefixes before production builds fail.
 
 ### 2. 🌐 1-Click Cloudflare Live Preview & Mobile QR Deck
-* **Zero-Config Public Links**: Generates free Cloudflare Quick Tunnels with end-to-end SSL encryption.
+* **Zero-Config Public Links**: Generates free Cloudflare shareable preview links with end-to-end SSL encryption.
 * **In-IDE SVG QR Code**: Scannable QR code generated directly in your sidebar webview.
 * **Status Bar Radar**: Live port indicator + instant copyable URL (`$(globe) Ship: Live (:3000)`).
 
@@ -53,7 +53,7 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 
 * **Free Tier (Forever Free)**:
   * Full local pre-flight compiler dry runs.
-  * 1-Click Cloudflare shareable preview links (`trycloudflare.com`).
+  * 1-Click Cloudflare shareable preview links.
   * In-IDE Mobile QR Code generator.
   * Plain-English Error Translator.
 * **Pro Tier ($9.99 One-Time Lifetime Purchase)**:
@@ -73,7 +73,7 @@ ShipWizard completes the three pillars of the vibe coding lifecycle:
 
 1. **[GitWizard](https://github.com/DrOpenSource/GitWizard)**: Protects your source code history and auto-saves against AI overwrites.
 2. **[EnvWizard](https://github.com/DrOpenSource/EnvWizard)**: Unjams your local dev ports (`3000`, `5173`) and heals missing `.env` variables.
-3. **[ShipWizard](https://github.com/DrOpenSource/ShipWizard)**: Ensures clean production builds and gives you instant 1-click shareable preview tunnels.
+3. **[ShipWizard](https://github.com/DrOpenSource/ShipWizard)**: Ensures clean production builds and gives you instant 1-click shareable preview links.
 
 ---
 

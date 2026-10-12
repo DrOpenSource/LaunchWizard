@@ -68,7 +68,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
           break;
 
         case 'buyLicense':
-          await vscode.env.openExternal(vscode.Uri.parse('https://kashyapster867.gumroad.com/l/shipwizard'));
+          await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
           break;
 
         case 'openWebsite':
