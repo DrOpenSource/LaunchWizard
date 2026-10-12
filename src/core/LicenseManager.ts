@@ -3,7 +3,6 @@ import type { LicenseState, LicenseTier } from '../shared/types.js';
 
 export class LicenseManager {
   private static readonly SALT = 'SHIPWIZARD_DR_OPENSOURCE_LIFETIME_SECRET_2026';
-  private static readonly PRODUCT_PERMALINK = 'shipwizard';
   private static readonly PRODUCT_ID = '5jmErjhP_JXqeLXQtq5TgA==';
   private static readonly GUMROAD_VERIFY_ENDPOINT = 'https://api.gumroad.com/v2/licenses/verify';
 
@@ -42,7 +41,7 @@ export class LicenseManager {
     if (!this.validateKeyPattern(trimmed)) {
       return {
         success: false,
-        message: 'Invalid license key format. Please provide a valid ShipWizard Lifetime key.',
+        message: 'Invalid license key format. Please provide a valid LaunchWizard Lifetime key.',
       };
     }
 
@@ -54,7 +53,7 @@ export class LicenseManager {
         this.activatedAt = Date.now();
         return {
           success: true,
-          message: 'ShipWizard Pro Lifetime activated successfully! Enjoy automated auto-healing and BYOK pipelines.',
+          message: 'LaunchWizard Pro Lifetime activated successfully! Enjoy automated auto-healing and BYOK pipelines.',
         };
       }
       return {
@@ -69,7 +68,6 @@ export class LicenseManager {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          product_permalink: LicenseManager.PRODUCT_PERMALINK,
           product_id: LicenseManager.PRODUCT_ID,
           license_key: trimmed,
         }),
@@ -83,7 +81,7 @@ export class LicenseManager {
         this.activatedAt = Date.now();
         return {
           success: true,
-          message: 'ShipWizard Pro Lifetime verified via Gumroad! All Pro features unlocked.',
+          message: 'LaunchWizard Pro Lifetime verified via Gumroad! All Pro features unlocked.',
         };
       }
 
@@ -99,7 +97,7 @@ export class LicenseManager {
         this.activatedAt = Date.now();
         return {
           success: true,
-          message: 'Pro license registered in offline mode. Welcome to ShipWizard Pro!',
+          message: 'Pro license registered in offline mode. Welcome to LaunchWizard Pro!',
         };
       }
 

@@ -79,7 +79,7 @@ describe('TunnelManager & QrGenerator', () => {
   it('starts and stops a live localtunnel when cloudflared is unavailable', async () => {
     const server = http.createServer((_req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('ShipWizard OK');
+      res.end('LaunchWizard OK');
     });
 
     await new Promise<void>((resolve) => server.listen(48291, resolve));

@@ -1,8 +1,8 @@
-# 📜 End User License Agreement (EULA) — ShipWizard
+# 📜 End User License Agreement (EULA) — LaunchWizard
 
 > **Last Updated: October 2026**
 
-This End User License Agreement ("Agreement") governs your use of **ShipWizard** ("Software"). By downloading, installing, or activating the Software, you agree to be bound by these terms.
+This End User License Agreement ("Agreement") governs your use of **LaunchWizard** ("Software"). By downloading, installing, or activating the Software, you agree to be bound by these terms.
 
 ---
 
@@ -31,5 +31,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO EVENT SHAL
 ---
 
 ## Support & Inquiries
-Website: [shipwizard.taqnik.in](https://shipwizard.taqnik.in)  
-Gumroad Store: [kashyapster867.gumroad.com/l/shipwizard](https://kashyapster867.gumroad.com/l/shipwizard)
+Website: [launchwizard.taqnik.in](https://launchwizard.taqnik.in)  
+Gumroad Store: [kashyapster867.gumroad.com/l/launchwizard](https://kashyapster867.gumroad.com/l/launchwizard)

@@ -1,4 +1,4 @@
-# 🗺️ ShipWizard — Implementation Roadmap & Trackable Sprints
+# 🗺️ LaunchWizard — Implementation Roadmap & Trackable Sprints
 
 > **Status Tracker**: Track progress sprint-by-sprint. Complete all unit and integration tests before advancing to the next milestone.
 
@@ -90,9 +90,9 @@
 **Goal**: Build the VS Code / Cursor / Antigravity UI components following the DrOpenSource aesthetic.
 
 - [x] **5.1 Extension Lifecycle & Commands (`extension.ts`)**
-  - [x] Register core commands: `shipwizard.runPreFlight`, `shipwizard.startTunnel`, `shipwizard.stopTunnel`, `shipwizard.autoHealAll`, `shipwizard.showMobileQr`.
+  - [x] Register core commands: `launchwizard.runPreFlight`, `launchwizard.startTunnel`, `launchwizard.stopTunnel`, `launchwizard.autoHealAll`, `launchwizard.showMobileQr`.
 - [x] **5.2 Status Bar Radar (`StatusBar.ts`)**
-  - [x] Live status indicator (`$(rocket) Ship: Ready`, `$(sync~spin) Checking...`, `$(globe) Live Link`).
+  - [x] Live status indicator (`$(rocket) Launch: Ready`, `$(sync~spin) Checking...`, `$(globe) Live Link`).
   - [x] Click-to-open quick actions menu.
 - [x] **5.3 Activity Bar Webview Deck (`PreFlightDeckView.ts`)**
   - [x] Glassmorphic dark/light UI with DrOpenSource design system.
@@ -119,7 +119,7 @@
 ---
 
 ## 📦 Phase 7: Landing Page & Showcase Portfolio (`index.html`)
-**Goal**: Create an Apple-grade marketing and documentation landing page for `shipwizard.taqnik.in`.
+**Goal**: Create an Apple-grade marketing and documentation landing page for `launchwizard.taqnik.in`.
 
 - [x] **7.1 Design System & Typography**
   - [x] Premium dark/light theme matching `envwizard.taqnik.in` with SF Pro / Inter typography.

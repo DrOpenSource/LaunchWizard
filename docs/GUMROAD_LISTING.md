@@ -1,6 +1,6 @@
-# 🛍️ ShipWizard Pro — Gumroad Media Kit & Listing Copy
+# 🛍️ LaunchWizard Pro — Gumroad Media Kit & Listing Copy
 
-> Use this exact copy and media assets to configure your Gumroad listing at **https://kashyapster867.gumroad.com/l/shipwizard**.
+> Use this exact copy and media assets to configure your Gumroad listing at **https://kashyapster867.gumroad.com/l/launchwizard**.
 
 ---
 
@@ -8,15 +8,15 @@
 
 | Field | Content |
 | :--- | :--- |
-| **Name** | **ShipWizard Pro Lifetime 🚀** |
+| **Name** | **LaunchWizard Pro Lifetime 🚀** |
 | **Subtitle** | The 'Get It Live' Pre-Flight Engine & 1-Click Instant Shareable Tunnel for Cursor & VS Code |
 | **Price** | **$9.99** (One-Time Lifetime Payment · Pay once, own forever) |
 | **Call to Action** | `I want this!` or `Get Pro Lifetime` |
 | **Category** | Software Development / Developer Tools |
 | **Tags** | `vscode`, `cursor`, `antigravity`, `vibe coding`, `cloudflare tunnel`, `preflight`, `nextjs`, `vite`, `vercel` |
-| **Canonical URL** | `https://shipwizard.taqnik.in` |
-| **Privacy Policy URL** | `https://shipwizard.taqnik.in/privacy` |
-| **Terms / EULA URL** | `https://shipwizard.taqnik.in/eula` |
+| **Canonical URL** | `https://launchwizard.taqnik.in` |
+| **Privacy Policy URL** | `https://launchwizard.taqnik.in/privacy` |
+| **Terms / EULA URL** | `https://launchwizard.taqnik.in/eula` |
 | **Support Email** | `taqnikin@gmail.com` |
 
 ---
@@ -24,13 +24,13 @@
 ## 🖼️ Media Assets to Upload
 
 1. **Cover Image (16:9)**:
-   - File path: [`assets/gumroad_cover.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/assets/gumroad_cover.jpg)
+   - File path: [`assets/gumroad_cover.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/gumroad_cover.jpg)
    - Dimensions: 1280 × 720 (High-res dark aesthetic with neon rocket & preview cards)
 2. **Thumbnail Image (1:1)**:
-   - File path: [`assets/gumroad_thumbnail.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/assets/gumroad_thumbnail.jpg)
+   - File path: [`assets/gumroad_thumbnail.jpg`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/gumroad_thumbnail.jpg)
    - Dimensions: 600 × 600 (Square app card with glowing rocket emblem)
 3. **App Icon**:
-   - File path: [`assets/icon.png`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/assets/icon.png)
+   - File path: [`assets/icon.png`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/LaunchWizard/assets/icon.png)
 
 ---
 
@@ -45,7 +45,7 @@ You build fast with AI pair programmers like Cursor, Claude, and Antigravity. Bu
 * ❌ Client components reading `process.env.API_KEY` without `NEXT_PUBLIC_`
 * ❌ Tedious mobile testing requiring ngrok tokens or premature git pushes
 
-**ShipWizard is your pre-flight safety shield.** It catches build blockers in < 3 seconds locally, translates compiler errors into friendly human language, auto-heals them with 1 click, and gives you an instant shareable HTTPS tunnel with a mobile QR code.
+**LaunchWizard is your pre-flight safety shield.** It catches build blockers in < 3 seconds locally, translates compiler errors into friendly human language, auto-heals them with 1 click, and gives you an instant shareable HTTPS tunnel with a mobile QR code.
 
 ---
 
@@ -61,10 +61,10 @@ You build fast with AI pair programmers like Cursor, Claude, and Antigravity. Bu
 ---
 
 ### 🛡️ The Calm Dev Triad:
-ShipWizard works alongside its sibling tools for maximum dev peace-of-mind:
+LaunchWizard works alongside its sibling tools for maximum dev peace-of-mind:
 * **GitWizard**: Protects git history and auto-saves against AI overwrites.
 * **EnvWizard**: Unjams blocked ports (:3000, :5173) and heals `.env` files.
-* **ShipWizard**: Catches build blockers and gets your app live instantly.
+* **LaunchWizard**: Catches build blockers and gets your app live instantly.
 
 Pay once. Own it forever. Zero monthly fees.
 ```

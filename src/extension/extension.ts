@@ -6,7 +6,7 @@ import { TunnelManager } from '../core/TunnelManager.js';
 import { LicenseManager } from '../core/LicenseManager.js';
 import { StatusBarController } from './StatusBar.js';
 import { PreFlightDeckViewProvider } from './PreFlightDeckView.js';
-import { ShipWizardCodeActionProvider } from './CodeActions.js';
+import { LaunchWizardCodeActionProvider } from './CodeActions.js';
 
 let statusBar: StatusBarController | null = null;
 let deckProvider: PreFlightDeckViewProvider | null = null;
@@ -14,7 +14,10 @@ let licenseManager: LicenseManager | null = null;
 
 export function activate(context: vscode.ExtensionContext): void {
   // 1. Initialize core services
-  const storedLicense = context.globalState.get<string>('shipwizard.licenseKey');
+  // Fall back to the pre-rename key so licenses activated before the rebrand stay valid.
+  const storedLicense =
+    context.globalState.get<string>('launchwizard.licenseKey') ??
+    context.globalState.get<string>('shipwizard.licenseKey');
   licenseManager = new LicenseManager(storedLicense);
 
   statusBar = new StatusBarController();
@@ -37,46 +40,46 @@ export function activate(context: vscode.ExtensionContext): void {
         { scheme: 'file', language: 'javascript' },
         { scheme: 'file', language: 'javascriptreact' },
       ],
-      new ShipWizardCodeActionProvider(),
+      new LaunchWizardCodeActionProvider(),
       {
-        providedCodeActionKinds: ShipWizardCodeActionProvider.providedCodeActionKinds,
+        providedCodeActionKinds: LaunchWizardCodeActionProvider.providedCodeActionKinds,
       }
     )
   );
 
   // 4. Command: Open Menu
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.openMenu', async () => {
+    vscode.commands.registerCommand('launchwizard.openMenu', async () => {
       await statusBar?.showQuickMenu();
     })
   );
 
   // 5. Command: Run Pre-Flight
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.runPreFlight', async () => {
+    vscode.commands.registerCommand('launchwizard.runPreFlight', async () => {
       statusBar?.setCheckingState();
       const report = await deckProvider?.runPreFlightCheck();
       if (report) {
         statusBar?.updateReport(report);
         if (report.passed) {
           vscode.window.showInformationMessage(
-            `🚀 ShipWizard: All pre-flight checks passed! Your ${report.frameworkName} project is ready to ship.`
+            `🚀 LaunchWizard: All pre-flight checks passed! Your ${report.frameworkName} project is ready to ship.`
           );
         } else {
           const action = await vscode.window.showWarningMessage(
-            `🚨 ShipWizard: Found ${report.errors.length} build blocker(s).`,
+            `🚨 LaunchWizard: Found ${report.errors.length} build blocker(s).`,
             '1-Click Auto-Heal',
             'View Deck'
           );
           if (action === '1-Click Auto-Heal') {
-            await vscode.commands.executeCommand('shipwizard.autoHealAll');
+            await vscode.commands.executeCommand('launchwizard.autoHealAll');
           } else if (action === 'View Deck') {
-            await vscode.commands.executeCommand('workbench.view.extension.shipwizard-deck');
+            await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
           }
         }
       } else {
         statusBar?.setReadyState();
-        vscode.window.showInformationMessage('ShipWizard: Please open a project folder to run pre-flight checks.');
+        vscode.window.showInformationMessage('LaunchWizard: Please open a project folder to run pre-flight checks.');
       }
     })
   );
@@ -89,7 +92,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const defaultPort = frameworkInfo?.defaultPort ?? 3000;
 
     const inputPort = await vscode.window.showInputBox({
-      title: 'ShipWizard: Launch Instant Shareable Link',
+      title: 'LaunchWizard: Launch Instant Shareable Link',
       prompt: `Enter local dev server port (detected ${frameworkInfo?.displayName ?? 'default'}: ${defaultPort})`,
       value: String(defaultPort),
     });
@@ -97,7 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!inputPort) return;
     const port = Number.parseInt(inputPort, 10);
     if (Number.isNaN(port) || port <= 0 || port > 65535) {
-      vscode.window.showErrorMessage(`ShipWizard: Invalid port number "${inputPort}".`);
+      vscode.window.showErrorMessage(`LaunchWizard: Invalid port number "${inputPort}".`);
       return;
     }
 
@@ -105,7 +108,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const isReachable = await TunnelManager.checkLocalPortReachable(port);
     if (!isReachable) {
       const choice = await vscode.window.showWarningMessage(
-        `ShipWizard: No active dev server was detected on port ${port}. Please make sure your dev server (e.g. npm run dev) is running.`,
+        `LaunchWizard: No active dev server was detected on port ${port}. Please make sure your dev server (e.g. npm run dev) is running.`,
         'Launch Anyway',
         'Cancel'
       );
@@ -117,7 +120,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `ShipWizard: Launching live preview link on port ${port}...`,
+        title: `LaunchWizard: Launching live preview link on port ${port}...`,
         cancellable: false,
       },
       async () => {
@@ -138,13 +141,13 @@ export function activate(context: vscode.ExtensionContext): void {
           } else if (action === 'Open Browser') {
             await vscode.env.openExternal(vscode.Uri.parse(tunnel.url));
           } else if (action === 'Show Mobile QR') {
-            await vscode.commands.executeCommand('shipwizard.showMobileQr');
+            await vscode.commands.executeCommand('launchwizard.showMobileQr');
           }
         } catch (err) {
           statusBar?.updateTunnelState();
           await deckProvider?.syncDeckState();
           vscode.window.showErrorMessage(
-            `ShipWizard Preview Error: ${err instanceof Error ? err.message : String(err)}`
+            `LaunchWizard Preview Error: ${err instanceof Error ? err.message : String(err)}`
           );
         }
       }
@@ -152,8 +155,8 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.startPreview', handleStartPreview),
-    vscode.commands.registerCommand('shipwizard.startTunnel', handleStartPreview)
+    vscode.commands.registerCommand('launchwizard.startPreview', handleStartPreview),
+    vscode.commands.registerCommand('launchwizard.startTunnel', handleStartPreview)
   );
 
   // 7. Command: Stop Preview / Tunnel
@@ -162,44 +165,44 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar?.updateTunnelState();
     deckProvider?.syncDeckState();
     if (stopped) {
-      vscode.window.showInformationMessage('🛑 ShipWizard: Live preview link stopped.');
+      vscode.window.showInformationMessage('🛑 LaunchWizard: Live preview link stopped.');
     }
   };
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.stopPreview', handleStopPreview),
-    vscode.commands.registerCommand('shipwizard.stopTunnel', handleStopPreview)
+    vscode.commands.registerCommand('launchwizard.stopPreview', handleStopPreview),
+    vscode.commands.registerCommand('launchwizard.stopTunnel', handleStopPreview)
   );
 
   // 8. Command: Auto-Heal All Blockers
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.autoHealAll', async () => {
+    vscode.commands.registerCommand('launchwizard.autoHealAll', async () => {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) return;
       const projectRoot = workspaceFolders[0].uri.fsPath;
 
       const report = await PreFlightEngine.run({ projectRoot });
       if (report.errors.length === 0) {
-        vscode.window.showInformationMessage('ShipWizard: No build blockers detected to heal.');
+        vscode.window.showInformationMessage('LaunchWizard: No build blockers detected to heal.');
         return;
       }
 
       const patches = AutoHealer.generatePatches(projectRoot, report.errors);
       if (patches.length === 0) {
-        vscode.window.showInformationMessage('ShipWizard: No automated patch rules matched current errors.');
+        vscode.window.showInformationMessage('LaunchWizard: No automated patch rules matched current errors.');
         return;
       }
 
       const result = AutoHealer.applyPatches(patches);
       if (result.success) {
         vscode.window.showInformationMessage(
-          `🪄 ShipWizard: Successfully healed ${result.healedCount} issue(s)! Re-running pre-flight check...`
+          `🪄 LaunchWizard: Successfully healed ${result.healedCount} issue(s)! Re-running pre-flight check...`
         );
         await deckProvider?.runPreFlightCheck();
         statusBar?.updateTunnelState();
       } else {
         vscode.window.showErrorMessage(
-          `ShipWizard: Failed to apply some patches: ${result.errors.join(', ')}`
+          `LaunchWizard: Failed to apply some patches: ${result.errors.join(', ')}`
         );
       }
     })
@@ -207,7 +210,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // 9. Command: Show Mobile QR
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.showMobileQr', async () => {
+    vscode.commands.registerCommand('launchwizard.showMobileQr', async () => {
       const tunnel = TunnelManager.getStatus();
       if (tunnel.status !== 'active') {
         const launch = await vscode.window.showInformationMessage(
@@ -215,20 +218,20 @@ export function activate(context: vscode.ExtensionContext): void {
           'Launch Preview'
         );
         if (launch === 'Launch Preview') {
-          await vscode.commands.executeCommand('shipwizard.startPreview');
+          await vscode.commands.executeCommand('launchwizard.startPreview');
         }
         return;
       }
 
-      await vscode.commands.executeCommand('workbench.view.extension.shipwizard-deck');
+      await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
     })
   );
 
   // 10. Command: Activate Pro License
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.activateLicense', async () => {
+    vscode.commands.registerCommand('launchwizard.activateLicense', async () => {
       const key = await vscode.window.showInputBox({
-        title: 'Activate ShipWizard Pro Lifetime',
+        title: 'Activate LaunchWizard Pro Lifetime',
         prompt: 'Enter your Pro License Key (or SHIP-PRO-XXXX-XXXX)',
         ignoreFocusOut: true,
       });
@@ -237,7 +240,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       const result = await licenseManager?.activateLicense(key);
       if (result?.success) {
-        await context.globalState.update('shipwizard.licenseKey', key);
+        await context.globalState.update('launchwizard.licenseKey', key);
         vscode.window.showInformationMessage(result.message);
         await deckProvider?.syncDeckState();
       } else {
@@ -248,15 +251,15 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // 11. Command: Buy Pro License
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.buyLicense', async () => {
-      await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
+    vscode.commands.registerCommand('launchwizard.buyLicense', async () => {
+      await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
     })
   );
 
   // 12. Command: Open Website
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipwizard.openWebsite', async () => {
-      await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
+    vscode.commands.registerCommand('launchwizard.openWebsite', async () => {
+      await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
     })
   );
 

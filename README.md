@@ -1,13 +1,13 @@
-# 🚀 ShipWizard — The 'Get It Live' Pre-Flight Engine
+# 🚀 LaunchWizard — The 'Get It Live' Pre-Flight Engine
 
 > **1-Click Secure Shareable Links + Auto-Healing Production TypeScript & Bundle Errors for Vibe Coders.**  
-> 🌐 Website: [https://shipwizard.taqnik.in](https://shipwizard.taqnik.in) • ⚡ [Get Lifetime Pro ($9.99)](https://shipwizard.taqnik.in)
+> 🌐 Website: [https://launchwizard.taqnik.in](https://launchwizard.taqnik.in) • ⚡ [Get Lifetime Pro ($9.99)](https://launchwizard.taqnik.in)
 
-**ShipWizard** is an intent-based pre-flight compiler inspector and 1-click shareable preview engine for **VS Code**, **Cursor**, and **Antigravity**. It completes the **DrOpenSource Calm Dev Suite** alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
+**LaunchWizard** is an intent-based pre-flight compiler inspector and 1-click shareable preview engine for **VS Code**, **Cursor**, and **Antigravity**. It completes the **DrOpenSource Calm Dev Suite** alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
 
 ---
 
-## ⚡ Why ShipWizard?
+## ⚡ Why LaunchWizard?
 
 Vibe coders and modern AI developers build full-stack apps at lightning speed using Cursor Composer, Claude, and Antigravity. But when it's time to test on a mobile phone or push to production:
 
@@ -15,7 +15,7 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 2. **The "Check My Phone" Friction**: Testing mobile responsiveness or sending a quick preview to a friend usually requires setting up ngrok tokens, port forwarding, or pushing half-baked commits to staging.
 3. **Cryptic Terminal Panic**: Compiler errors like `TS2307`, `TS2322`, or Next.js App Router client directive exceptions cause anxiety and derail flow state.
 
-**ShipWizard gives you complete peace of mind before you ship:**
+**LaunchWizard gives you complete peace of mind before you ship:**
 * **3-Second Pre-Flight Radar**: Non-destructive dry runs catch every build blocker locally before you push to git.
 * **1-Click Free Cloudflare Preview**: Instant secure HTTPS preview link with zero configuration, no accounts, and no credit cards.
 * **In-IDE Mobile QR Code**: Scan your screen with your phone camera to test live apps on your device in seconds.
@@ -34,7 +34,7 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 ### 2. 🌐 1-Click Cloudflare Live Preview & Mobile QR Deck
 * **Zero-Config Public Links**: Generates free Cloudflare shareable preview links with end-to-end SSL encryption.
 * **In-IDE SVG QR Code**: Scannable QR code generated directly in your sidebar webview.
-* **Status Bar Radar**: Live port indicator + instant copyable URL (`$(globe) Ship: Live (:3000)`).
+* **Status Bar Radar**: Live port indicator + instant copyable URL (`$(globe) Launch: Live (:3000)`).
 
 ### 3. 🗣️ Plain-English Compiler Error Translator
 * Translates panic-inducing errors into human language:
@@ -63,17 +63,17 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
   * Activate on up to 3 personal machines.
   * **Zero subscriptions** — pay once, own forever.
 
-👉 **[Get Pro Lifetime at shipwizard.taqnik.in](https://shipwizard.taqnik.in)**
+👉 **[Get Pro Lifetime at launchwizard.taqnik.in](https://launchwizard.taqnik.in)**
 
 ---
 
 ## 🧩 The DrOpenSource Calm Dev Suite
 
-ShipWizard completes the three pillars of the vibe coding lifecycle:
+LaunchWizard completes the three pillars of the vibe coding lifecycle:
 
 1. **[GitWizard](https://github.com/DrOpenSource/GitWizard)**: Protects your source code history and auto-saves against AI overwrites.
 2. **[EnvWizard](https://github.com/DrOpenSource/EnvWizard)**: Unjams your local dev ports (`3000`, `5173`) and heals missing `.env` variables.
-3. **[ShipWizard](https://github.com/DrOpenSource/ShipWizard)**: Ensures clean production builds and gives you instant 1-click shareable preview links.
+3. **[LaunchWizard](https://github.com/DrOpenSource/LaunchWizard)**: Ensures clean production builds and gives you instant 1-click shareable preview links.
 
 ---
 

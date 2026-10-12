@@ -8,7 +8,7 @@ describe('FrameworkDetector', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shipwizard-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'launchwizard-test-'));
   });
 
   afterEach(() => {

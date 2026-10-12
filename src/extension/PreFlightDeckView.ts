@@ -8,7 +8,7 @@ import { LicenseManager } from '../core/LicenseManager.js';
 import type { PreFlightReport, TranslatedError, TunnelInfo, LicenseState, FrameworkInfo } from '../shared/types.js';
 
 export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'shipwizard.preFlightDeck';
+  public static readonly viewType = 'launchwizard.preFlightDeck';
   private view?: vscode.WebviewView;
 
   private latestReport: PreFlightReport | null = null;
@@ -41,17 +41,17 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
           break;
 
         case 'startTunnel':
-          await vscode.commands.executeCommand('shipwizard.startTunnel');
+          await vscode.commands.executeCommand('launchwizard.startTunnel');
           await this.syncDeckState();
           break;
 
         case 'stopTunnel':
-          await vscode.commands.executeCommand('shipwizard.stopTunnel');
+          await vscode.commands.executeCommand('launchwizard.stopTunnel');
           await this.syncDeckState();
           break;
 
         case 'healAll':
-          await vscode.commands.executeCommand('shipwizard.autoHealAll');
+          await vscode.commands.executeCommand('launchwizard.autoHealAll');
           await this.runPreFlightCheck();
           break;
 
@@ -63,16 +63,16 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
           break;
 
         case 'activateLicense':
-          await vscode.commands.executeCommand('shipwizard.activateLicense');
+          await vscode.commands.executeCommand('launchwizard.activateLicense');
           await this.syncDeckState();
           break;
 
         case 'buyLicense':
-          await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
+          await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
           break;
 
         case 'openWebsite':
-          await vscode.env.openExternal(vscode.Uri.parse('https://shipwizard.taqnik.in'));
+          await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
           break;
       }
     });
@@ -130,7 +130,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShipWizard Pre-Flight Deck</title>
+  <title>LaunchWizard Pre-Flight Deck</title>
   <style>
     :root {
       --bg: var(--vscode-sideBar-background);
@@ -312,7 +312,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
   <div class="header">
-    <div class="brand">🚀 ShipWizard</div>
+    <div class="brand">🚀 LaunchWizard</div>
     <div id="frameworkPill" class="badge-pill">Scanning...</div>
   </div>
 
@@ -363,7 +363,7 @@ export class PreFlightDeckViewProvider implements vscode.WebviewViewProvider {
 
   <div class="footer-links">
     Part of the Calm Dev Suite<br/>
-    <a href="https://shipwizard.taqnik.in">shipwizard.taqnik.in</a>
+    <a href="https://launchwizard.taqnik.in">launchwizard.taqnik.in</a>
   </div>
 
   <script>

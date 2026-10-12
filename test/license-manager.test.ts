@@ -27,7 +27,7 @@ describe('LicenseManager', () => {
 
     const result = await manager.activateLicense(validKey);
     expect(result.success).toBe(true);
-    expect(result.message).toContain('ShipWizard Pro Lifetime activated');
+    expect(result.message).toContain('LaunchWizard Pro Lifetime activated');
 
     const status = manager.getStatus();
     expect(status.tier).toBe('pro');

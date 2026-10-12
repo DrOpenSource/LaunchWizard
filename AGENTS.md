@@ -1,6 +1,6 @@
-# AGENTS.md — ShipWizard Project Protocol
+# AGENTS.md — LaunchWizard Project Protocol
 
-Welcome, Agent. You are developing **ShipWizard**, an intent-based "Get It Live" pre-flight engine and 1-click shareable tunnel extension for **VS Code**, **Cursor**, and **Antigravity**, created for vibe coders and modern developers.
+Welcome, Agent. You are developing **LaunchWizard**, an intent-based "Get It Live" pre-flight engine and 1-click shareable tunnel extension for **VS Code**, **Cursor**, and **Antigravity**, created for vibe coders and modern developers.
 
 ---
 
@@ -45,7 +45,7 @@ Welcome, Agent. You are developing **ShipWizard**, an intent-based "Get It Live"
 ## 2. Directory Layout & Standards
 
 ```
-ShipWizard/
+LaunchWizard/
 ├── docs/
 │   ├── PRD.md                 # Product Requirements Document & User Personas
 │   └── ROADMAP.md             # Phase-wise sprint checklist & tracker
@@ -81,10 +81,10 @@ ShipWizard/
 
 ## 3. The DrOpenSource Calm Dev Suite Synergy
 
-ShipWizard completes the developer safety triad alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard):
+LaunchWizard completes the developer safety triad alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard):
 
 1. **GitWizard**: Protects your source code history and auto-saves against AI overwrites.
 2. **EnvWizard**: Unjams your local dev ports (`3000`, `5173`) and heals missing `.env` variables.
-3. **ShipWizard**: Ensures your code compiles cleanly for production and gives you an instant 1-click shareable preview tunnel to share with clients or test on your phone.
+3. **LaunchWizard**: Ensures your code compiles cleanly for production and gives you an instant 1-click shareable preview tunnel to share with clients or test on your phone.
 
 Shared visual aesthetic: dark-mode glassmorphic styling, non-blocking toasts, zero noise, and 1-click intent triggers.

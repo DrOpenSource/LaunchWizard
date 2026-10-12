@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export class ShipWizardCodeActionProvider implements vscode.CodeActionProvider {
+export class LaunchWizardCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
 
   public provideCodeActions(
@@ -17,7 +17,7 @@ export class ShipWizardCodeActionProvider implements vscode.CodeActionProvider {
       !document.getText().includes("'use client'")
     ) {
       const fix = new vscode.CodeAction(
-        "🪄 ShipWizard: Add 'use client' directive to line 1",
+        "🪄 LaunchWizard: Add 'use client' directive to line 1",
         vscode.CodeActionKind.QuickFix
       );
       fix.edit = new vscode.WorkspaceEdit();
@@ -36,7 +36,7 @@ export class ShipWizardCodeActionProvider implements vscode.CodeActionProvider {
     ) {
       const varName = secretMatch[1];
       const fix = new vscode.CodeAction(
-        `🪄 ShipWizard: Prefix "${varName}" with "NEXT_PUBLIC_"`,
+        `🪄 LaunchWizard: Prefix "${varName}" with "NEXT_PUBLIC_"`,
         vscode.CodeActionKind.QuickFix
       );
       fix.edit = new vscode.WorkspaceEdit();
@@ -57,7 +57,7 @@ export class ShipWizardCodeActionProvider implements vscode.CodeActionProvider {
       if (viteMatch) {
         const varName = viteMatch[1];
         const fix = new vscode.CodeAction(
-          `🪄 ShipWizard: Convert to import.meta.env.VITE_${varName}`,
+          `🪄 LaunchWizard: Convert to import.meta.env.VITE_${varName}`,
           vscode.CodeActionKind.QuickFix
         );
         fix.edit = new vscode.WorkspaceEdit();

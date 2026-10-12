@@ -1,5 +1,4 @@
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
-import * as http from 'node:http';
 import * as net from 'node:net';
 import { QrGenerator } from './QrGenerator.js';
 import type { TunnelInfo } from '../shared/types.js';

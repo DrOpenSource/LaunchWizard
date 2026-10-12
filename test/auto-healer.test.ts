@@ -9,7 +9,7 @@ describe('AutoHealer', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shipwizard-healer-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'launchwizard-healer-test-'));
   });
 
   afterEach(() => {

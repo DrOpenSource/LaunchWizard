@@ -8,7 +8,7 @@ describe('PreFlightEngine', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shipwizard-engine-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'launchwizard-engine-test-'));
   });
 
   afterEach(() => {

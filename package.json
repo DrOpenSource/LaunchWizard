@@ -1,8 +1,8 @@
 {
-  "name": "shipwizard",
-  "displayName": "ShipWizard",
+  "name": "launchwizard",
+  "displayName": "LaunchWizard",
   "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "pricing": "Free",
   "publisher": "dr-opensource",
   "author": "Dr. Shubham Kashyap",
@@ -10,12 +10,12 @@
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DrOpenSource/ShipWizard.git"
+    "url": "https://github.com/DrOpenSource/LaunchWizard.git"
   },
   "bugs": {
-    "url": "https://github.com/DrOpenSource/ShipWizard/issues"
+    "url": "https://github.com/DrOpenSource/LaunchWizard/issues"
   },
-  "homepage": "https://shipwizard.taqnik.in",
+  "homepage": "https://launchwizard.taqnik.in",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -41,60 +41,60 @@
   "contributes": {
     "commands": [
       {
-        "command": "shipwizard.runPreFlight",
-        "title": "ShipWizard: Run Pre-Flight Build Check",
-        "category": "ShipWizard"
+        "command": "launchwizard.runPreFlight",
+        "title": "LaunchWizard: Run Pre-Flight Build Check",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.startPreview",
-        "title": "ShipWizard: 1-Click Get Live Shareable Preview Link",
-        "category": "ShipWizard"
+        "command": "launchwizard.startPreview",
+        "title": "LaunchWizard: 1-Click Get Live Shareable Preview Link",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.stopPreview",
-        "title": "ShipWizard: Stop Active Preview Link",
-        "category": "ShipWizard"
+        "command": "launchwizard.stopPreview",
+        "title": "LaunchWizard: Stop Active Preview Link",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.autoHealAll",
-        "title": "ShipWizard: 1-Click Auto-Heal Build Blockers",
-        "category": "ShipWizard"
+        "command": "launchwizard.autoHealAll",
+        "title": "LaunchWizard: 1-Click Auto-Heal Build Blockers",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.showMobileQr",
-        "title": "ShipWizard: Show Mobile QR Code",
-        "category": "ShipWizard"
+        "command": "launchwizard.showMobileQr",
+        "title": "LaunchWizard: Show Mobile QR Code",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.activateLicense",
-        "title": "ShipWizard: Activate Pro License",
-        "category": "ShipWizard"
+        "command": "launchwizard.activateLicense",
+        "title": "LaunchWizard: Activate Pro License",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.buyLicense",
-        "title": "ShipWizard: Get Pro Lifetime License",
-        "category": "ShipWizard"
+        "command": "launchwizard.buyLicense",
+        "title": "LaunchWizard: Get Pro Lifetime License",
+        "category": "LaunchWizard"
       },
       {
-        "command": "shipwizard.openWebsite",
-        "title": "ShipWizard: Visit Documentation Website",
-        "category": "ShipWizard"
+        "command": "launchwizard.openWebsite",
+        "title": "LaunchWizard: Visit Documentation Website",
+        "category": "LaunchWizard"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "shipwizard-deck",
-          "title": "ShipWizard",
+          "id": "launchwizard-deck",
+          "title": "LaunchWizard",
           "icon": "$(rocket)"
         }
       ]
     },
     "views": {
-      "shipwizard-deck": [
+      "launchwizard-deck": [
         {
           "type": "webview",
-          "id": "shipwizard.preFlightDeck",
+          "id": "launchwizard.preFlightDeck",
           "name": "Pre-Flight Deck"
         }
       ]

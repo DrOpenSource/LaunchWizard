@@ -11,7 +11,7 @@ export class StatusBarController {
       vscode.StatusBarAlignment.Right,
       100
     );
-    this.statusBarItem.command = 'shipwizard.openMenu';
+    this.statusBarItem.command = 'launchwizard.openMenu';
     this.setReadyState();
     this.statusBarItem.show();
   }
@@ -19,19 +19,19 @@ export class StatusBarController {
   public setReadyState(): void {
     const tunnel = TunnelManager.getStatus();
     if (tunnel.status === 'active') {
-      this.statusBarItem.text = `$(globe) Ship: Live (${tunnel.localPort})`;
-      this.statusBarItem.tooltip = `ShipWizard: Tunnel active at ${tunnel.url}. Click to copy or inspect.`;
+      this.statusBarItem.text = `$(globe) Launch: Live (${tunnel.localPort})`;
+      this.statusBarItem.tooltip = `LaunchWizard: Tunnel active at ${tunnel.url}. Click to copy or inspect.`;
       this.statusBarItem.backgroundColor = undefined;
     } else {
-      this.statusBarItem.text = '$(rocket) Ship: Ready';
-      this.statusBarItem.tooltip = 'ShipWizard: Pre-flight engine ready. Click for quick ship actions.';
+      this.statusBarItem.text = '$(rocket) Launch: Ready';
+      this.statusBarItem.tooltip = 'LaunchWizard: Pre-flight engine ready. Click for quick ship actions.';
       this.statusBarItem.backgroundColor = undefined;
     }
   }
 
   public setCheckingState(): void {
-    this.statusBarItem.text = '$(sync~spin) Ship: Checking Build...';
-    this.statusBarItem.tooltip = 'ShipWizard: Inspecting TypeScript and production bundle sanity...';
+    this.statusBarItem.text = '$(sync~spin) Launch: Checking Build...';
+    this.statusBarItem.tooltip = 'LaunchWizard: Inspecting TypeScript and production bundle sanity...';
     this.statusBarItem.backgroundColor = undefined;
   }
 
@@ -41,18 +41,18 @@ export class StatusBarController {
 
     if (!report.passed) {
       const errCount = report.errors.length;
-      this.statusBarItem.text = `$(error) Ship: ${errCount} Blocker${errCount > 1 ? 's' : ''}`;
-      this.statusBarItem.tooltip = `ShipWizard: ${errCount} build blockers detected. Click to auto-heal.`;
+      this.statusBarItem.text = `$(error) Launch: ${errCount} Blocker${errCount > 1 ? 's' : ''}`;
+      this.statusBarItem.tooltip = `LaunchWizard: ${errCount} build blockers detected. Click to auto-heal.`;
       this.statusBarItem.backgroundColor = new vscode.ThemeColor(
         'statusBarItem.warningBackground'
       );
     } else if (tunnel.status === 'active') {
-      this.statusBarItem.text = `$(globe) Ship: Live (${tunnel.localPort})`;
-      this.statusBarItem.tooltip = `ShipWizard: Clean build! Tunnel active at ${tunnel.url}`;
+      this.statusBarItem.text = `$(globe) Launch: Live (${tunnel.localPort})`;
+      this.statusBarItem.tooltip = `LaunchWizard: Clean build! Tunnel active at ${tunnel.url}`;
       this.statusBarItem.backgroundColor = undefined;
     } else {
-      this.statusBarItem.text = '$(check) Ship: Build Passed';
-      this.statusBarItem.tooltip = 'ShipWizard: All production build pre-flight checks passed!';
+      this.statusBarItem.text = '$(check) Launch: Build Passed';
+      this.statusBarItem.tooltip = 'LaunchWizard: All production build pre-flight checks passed!';
       this.statusBarItem.backgroundColor = undefined;
     }
   }
@@ -109,26 +109,26 @@ export class StatusBarController {
     });
 
     const selected = await vscode.window.showQuickPick(items, {
-      placeHolder: 'ShipWizard — The "Get It Live" Pre-Flight Engine',
+      placeHolder: 'LaunchWizard — The "Get It Live" Pre-Flight Engine',
     });
 
     if (!selected) return;
 
     if (selected.label.includes('Run Pre-Flight')) {
-      await vscode.commands.executeCommand('shipwizard.runPreFlight');
+      await vscode.commands.executeCommand('launchwizard.runPreFlight');
     } else if (selected.label.includes('Copy Live Tunnel Link')) {
       await vscode.env.clipboard.writeText(tunnel.url);
       vscode.window.showInformationMessage(`📋 Copied live tunnel URL: ${tunnel.url}`);
     } else if (selected.label.includes('Show Mobile QR')) {
-      await vscode.commands.executeCommand('shipwizard.showMobileQr');
+      await vscode.commands.executeCommand('launchwizard.showMobileQr');
     } else if (selected.label.includes('Stop Active Tunnel')) {
-      await vscode.commands.executeCommand('shipwizard.stopTunnel');
+      await vscode.commands.executeCommand('launchwizard.stopTunnel');
     } else if (selected.label.includes('Get Live Shareable Link')) {
-      await vscode.commands.executeCommand('shipwizard.startTunnel');
+      await vscode.commands.executeCommand('launchwizard.startTunnel');
     } else if (selected.label.includes('Auto-Heal All')) {
-      await vscode.commands.executeCommand('shipwizard.autoHealAll');
+      await vscode.commands.executeCommand('launchwizard.autoHealAll');
     } else if (selected.label.includes('Open Pre-Flight Deck')) {
-      await vscode.commands.executeCommand('workbench.view.extension.shipwizard-deck');
+      await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
     }
   }
 

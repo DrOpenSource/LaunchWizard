@@ -1,4 +1,4 @@
-# 🚀 ShipWizard — Product Requirements Document (PRD)
+# 🚀 LaunchWizard — Product Requirements Document (PRD)
 
 > **"The 'Get It Live' Pre-Flight Engine: 1-click secure tunnels + auto-healing production bundle & TypeScript errors before deploying to Vercel and Cloudflare."**
 
@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary & Vision
 
-**ShipWizard** is an intent-based pre-flight inspection and instant shareable tunnel extension for **VS Code**, **Cursor**, and **Antigravity**. It completes the DrOpenSource Calm Dev Suite alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
+**LaunchWizard** is an intent-based pre-flight inspection and instant shareable tunnel extension for **VS Code**, **Cursor**, and **Antigravity**. It completes the DrOpenSource Calm Dev Suite alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
 
 ### The Problem
 Vibe coders and modern AI developers write code faster than ever before. But when it's time to test on a mobile phone or push to production:
@@ -19,7 +19,7 @@ Vibe coders and modern AI developers write code faster than ever before. But whe
 3. **Cryptic Terminal Panic**: Vibe coders get hit with a 200-line compiler traceback that causes anxiety, stalling their creative momentum.
 
 ### The Solution
-ShipWizard provides:
+LaunchWizard provides:
 * **Pre-Flight Radar**: A 1-click or passive check that catches every build-breaking bug locally in under 3 seconds before you push to git or trigger a CI/CD build.
 * **Plain-English Error Translator**: Translates cryptic TypeScript and bundler errors into clear, friendly cards.
 * **Auto-Healer**: 1-click automated fixes for common build blockers (missing imports, `'use client'`, env prefixes, type assertions).
@@ -30,14 +30,14 @@ ShipWizard provides:
 
 ## 2. Product Philosophy: The GitWizard & EnvWizard DNA
 
-ShipWizard follows the exact core design philosophy proven across DrOpenSource products:
+LaunchWizard follows the exact core design philosophy proven across DrOpenSource products:
 
-| DrOpenSource Tenet | ShipWizard Implementation |
+| DrOpenSource Tenet | LaunchWizard Implementation |
 | :--- | :--- |
 | **🛡️ Safe Defaults & Zero Loss** | All auto-heals create non-destructive diffs with instant undo. Pre-flight checks run pure non-emitting dry runs (`tsc --noEmit`). |
 | **🗣️ Plain-English Translations** | Translates `TS2307`, `TS2322`, Rollup chunk limits, and Next.js SSG errors into conversational cards with clear fixes. |
 | **⚡ Intent-Driven Calm Deck** | 1-Click *"Run Pre-Flight"*, *"Get Live Link"*, *"Auto-Heal Build"*, and *"Scan Mobile QR"* action triggers. |
-| **📡 Passive Guardian** | Non-intrusive status bar indicator (`$(rocket) Ship: Ready | Live [Link]`) that surfaces build health without popups. |
+| **📡 Passive Guardian** | Non-intrusive status bar indicator (`$(rocket) Launch: Ready | Live [Link]`) that surfaces build health without popups. |
 | **💰 Fair Pay-Once Pricing** | **$9.99 Lifetime License** on Gumroad. No recurring subscription fees. Cloud add-ons use BYOK (Bring Your Own Key). |
 
 ---
@@ -47,7 +47,7 @@ ShipWizard follows the exact core design philosophy proven across DrOpenSource p
 ### Persona A: "The Vibe Coder" (Primary)
 * **Profile**: Founders, designers, creators, and hobbyists building full-stack apps with Cursor Composer, Claude, and Antigravity.
 * **Pain Points**: Doesn't want to learn the intricacies of TypeScript configs or Webpack/Rollup chunking. Pushes code to Vercel, gets an email 3 minutes later saying `Build Failed (Command "npm run build" exited with 1)`, and feels defeated.
-* **Value Realization**: ShipWizard catches the exact error in the editor, translates it to plain English, and provides a 1-click button to fix it. Then gives them a live link to test on their phone immediately.
+* **Value Realization**: LaunchWizard catches the exact error in the editor, translates it to plain English, and provides a 1-click button to fix it. Then gives them a live link to test on their phone immediately.
 
 ### Persona B: "The Solo Indie Hacker / Client Freelancer" (Secondary)
 * **Profile**: Solo builders delivering web apps to clients or testing responsive mobile layouts.
@@ -114,10 +114,10 @@ ShipWizard follows the exact core design philosophy proven across DrOpenSource p
 ## 5. User Interface & Experience Architecture
 
 ### 5.1 Status Bar Radar
-* **Idle State**: `$(rocket) ShipWizard: Ready`
-* **Pre-Flight In Progress**: `$(sync~spin) ShipWizard: Checking Build...`
-* **Errors Found**: `$(error) ShipWizard: 2 Build Blockers [Fix]`
-* **Live Tunnel Active**: `$(globe) ShipWizard: Live [https://...] $(link-external)`
+* **Idle State**: `$(rocket) LaunchWizard: Ready`
+* **Pre-Flight In Progress**: `$(sync~spin) LaunchWizard: Checking Build...`
+* **Errors Found**: `$(error) LaunchWizard: 2 Build Blockers [Fix]`
+* **Live Tunnel Active**: `$(globe) LaunchWizard: Live [https://...] $(link-external)`
 
 ### 5.2 Activity Bar Webview Deck (`PreFlightDeckView`)
 * **Header**: Calm glassmorphic badge with DrOpenSource branding and active framework badge.
