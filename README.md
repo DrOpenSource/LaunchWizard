@@ -1,8 +1,9 @@
 # 🚀 ShipWizard — The 'Get It Live' Pre-Flight Engine
 
-> **1-Click Secure Shareable Links + Auto-Healing Production TypeScript & Bundle Errors for Vibe Coders.**
+> **1-Click Secure Shareable Links + Auto-Healing Production TypeScript & Bundle Errors for Vibe Coders.**  
+> 🌐 Website: [https://shipwizard.taqnik.in](https://shipwizard.taqnik.in) • ⚡ [Get Lifetime Pro ($9.99)](https://shipwizard.taqnik.in)
 
-**ShipWizard** is an intent-based pre-flight compiler inspector and 1-click preview tunnel extension for **VS Code**, **Cursor**, and **Antigravity**. It completes the **DrOpenSource Calm Dev Suite** alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
+**ShipWizard** is an intent-based pre-flight compiler inspector and 1-click shareable preview engine for **VS Code**, **Cursor**, and **Antigravity**. It completes the **DrOpenSource Calm Dev Suite** alongside [GitWizard](https://github.com/DrOpenSource/GitWizard) and [EnvWizard](https://github.com/DrOpenSource/EnvWizard).
 
 ---
 
@@ -16,7 +17,7 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 
 **ShipWizard gives you complete peace of mind before you ship:**
 * **3-Second Pre-Flight Radar**: Non-destructive dry runs catch every build blocker locally before you push to git.
-* **1-Click Free Cloudflare Tunnel**: Instant secure HTTPS preview link (`trycloudflare.com`) with zero configuration, no accounts, and no credit cards.
+* **1-Click Free Cloudflare Preview**: Instant secure HTTPS preview link (`trycloudflare.com`) with zero configuration, no accounts, and no credit cards.
 * **In-IDE Mobile QR Code**: Scan your screen with your phone camera to test live apps on your device in seconds.
 * **Plain-English Error Translator**: Translates cryptic compiler codes into friendly, solvable cards.
 * **Deterministic 1-Click Auto-Healer**: Safely fixes missing `'use client'`, environment variables (`NEXT_PUBLIC_`), and import paths with full rollback safety.
@@ -30,8 +31,8 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 * **Non-Destructive Compiler Dry Run**: Executes `tsc --noEmit` and static bundle verification in memory.
 * **Secret Leak & Prefix Shield**: Catches client components accessing environment variables without `NEXT_PUBLIC_` or `VITE_` prefixes before production builds fail.
 
-### 2. 🌐 1-Click Cloudflare Quick Tunnel & Mobile QR Deck
-* **Zero-Config Public Links**: Spawns free Cloudflare Quick Tunnels with end-to-end SSL encryption.
+### 2. 🌐 1-Click Cloudflare Live Preview & Mobile QR Deck
+* **Zero-Config Public Links**: Generates free Cloudflare Quick Tunnels with end-to-end SSL encryption.
 * **In-IDE SVG QR Code**: Scannable QR code generated directly in your sidebar webview.
 * **Status Bar Radar**: Live port indicator + instant copyable URL (`$(globe) Ship: Live (:3000)`).
 
@@ -52,17 +53,17 @@ Vibe coders and modern AI developers build full-stack apps at lightning speed us
 
 * **Free Tier (Forever Free)**:
   * Full local pre-flight compiler dry runs.
-  * 1-Click Cloudflare Quick Tunnels (`trycloudflare.com`).
+  * 1-Click Cloudflare shareable preview links (`trycloudflare.com`).
   * In-IDE Mobile QR Code generator.
   * Plain-English Error Translator.
-* **Pro Tier ($9.99 One-Time Lifetime Purchase on Gumroad)**:
+* **Pro Tier ($9.99 One-Time Lifetime Purchase)**:
   * Automated AST auto-healing on file save.
   * BYOK 1-Click Cloud Deploy (Vercel & Cloudflare Pages).
-  * Password-protected tunnels & custom subdomains.
+  * Password-protected preview links & custom subdomains.
   * Activate on up to 3 personal machines.
   * **Zero subscriptions** — pay once, own forever.
 
-👉 **[Buy Pro Lifetime for $9.99](https://kashyapster867.gumroad.com/l/shipwizard)**
+👉 **[Get Pro Lifetime at shipwizard.taqnik.in](https://shipwizard.taqnik.in)**
 
 ---
 

@@ -1,8 +1,8 @@
 {
   "name": "shipwizard",
   "displayName": "ShipWizard",
-  "description": "The 'Get It Live' Pre-Flight Engine & 1-Click Shareable Tunnel for vibe coders. Catch production TypeScript & bundler build errors before deploying to Vercel/Cloudflare, and get an instant mobile-friendly test link.",
-  "version": "0.1.1",
+  "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
+  "version": "0.1.2",
   "publisher": "dr-opensource",
   "license": "MIT",
   "icon": "assets/icon.png",
@@ -18,20 +18,19 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages",
-    "Testing",
-    "Other"
+    "Other",
+    "Programming Languages"
   ],
   "keywords": [
-    "ship",
-    "deploy",
     "preflight",
-    "cloudflare tunnel",
-    "tunnel",
-    "typescript errors",
+    "build check",
+    "typescript",
+    "live preview",
+    "share link",
     "vibe coding",
     "nextjs",
-    "vite"
+    "vite",
+    "testing"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -46,12 +45,12 @@
       },
       {
         "command": "shipwizard.startTunnel",
-        "title": "ShipWizard: 1-Click Get Live Shareable Tunnel",
+        "title": "ShipWizard: 1-Click Get Live Shareable Preview Link",
         "category": "ShipWizard"
       },
       {
         "command": "shipwizard.stopTunnel",
-        "title": "ShipWizard: Stop Active Tunnel",
+        "title": "ShipWizard: Stop Active Preview Link",
         "category": "ShipWizard"
       },
       {

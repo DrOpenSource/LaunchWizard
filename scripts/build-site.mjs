@@ -19,9 +19,7 @@ const filesToCopy = [
   'eula.html',
   'EULA.md',
   'PRIVACY.md',
-  'LICENSE',
-  'shipwizard-0.1.0.vsix',
-  'shipwizard-0.1.1.vsix'
+  'LICENSE'
 ];
 
 for (const file of filesToCopy) {
@@ -30,6 +28,14 @@ for (const file of filesToCopy) {
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, dest);
     console.log(`  ✓ Copied ${file}`);
+  }
+}
+
+// Copy all .vsix packages
+for (const f of fs.readdirSync(rootDir)) {
+  if (f.endsWith('.vsix')) {
+    fs.copyFileSync(path.join(rootDir, f), path.join(publicDir, f));
+    console.log(`  ✓ Copied ${f}`);
   }
 }
 
