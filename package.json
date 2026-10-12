@@ -1,0 +1,119 @@
+{
+  "name": "shipwizard",
+  "displayName": "ShipWizard",
+  "description": "The 'Get It Live' Pre-Flight Engine & 1-Click Shareable Tunnel for vibe coders. Catch production TypeScript & bundler build errors before deploying to Vercel/Cloudflare, and get an instant mobile-friendly test link.",
+  "version": "0.1.0",
+  "publisher": "dr-opensource",
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DrOpenSource/ShipWizard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DrOpenSource/ShipWizard/issues"
+  },
+  "homepage": "https://shipwizard.taqnik.in",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "ship",
+    "deploy",
+    "preflight",
+    "cloudflare tunnel",
+    "tunnel",
+    "typescript errors",
+    "vibe coding",
+    "nextjs",
+    "vite"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shipwizard.runPreFlight",
+        "title": "ShipWizard: Run Pre-Flight Build Check",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.startTunnel",
+        "title": "ShipWizard: 1-Click Get Live Shareable Tunnel",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.stopTunnel",
+        "title": "ShipWizard: Stop Active Tunnel",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.autoHealAll",
+        "title": "ShipWizard: 1-Click Auto-Heal Build Blockers",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.showMobileQr",
+        "title": "ShipWizard: Show Mobile QR Code",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.activateLicense",
+        "title": "ShipWizard: Activate Pro License ($9.99 Lifetime)",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.buyLicense",
+        "title": "ShipWizard: Get Pro Lifetime License ($9.99)",
+        "category": "ShipWizard"
+      },
+      {
+        "command": "shipwizard.openWebsite",
+        "title": "ShipWizard: Visit Website (shipwizard.taqnik.in)",
+        "category": "ShipWizard"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shipwizard-deck",
+          "title": "ShipWizard",
+          "icon": "assets/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "shipwizard-deck": [
+        {
+          "type": "webview",
+          "id": "shipwizard.preFlightDeck",
+          "name": "Pre-Flight Deck"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./ --noEmit",
+    "build": "node esbuild.config.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "deploy:site": "npm run build:site && npx wrangler deploy",
+    "watch": "node esbuild.config.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "npx @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>ShipWizard — The 'Get It Live' Pre-Flight Engine & Instant Tunnel</title>
+    <meta
+      name="description"
+      content="Catch production TypeScript & bundler build errors before deploying to Vercel/Cloudflare, and get an instant 1-click shareable tunnel for mobile testing."
+    />
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />
+    <meta
+      property="og:title"
+      content="ShipWizard — The 'Get It Live' Pre-Flight Engine"
+    />
+    <meta
+      property="og:description"
+      content="1-click secure Cloudflare tunnel + auto-healing production TypeScript and bundler errors for vibe coders. Zero subscriptions."
+    />
+    <link rel="canonical" href="https://shipwizard.taqnik.in" />
+    <script src="https://gumroad.com/js/gumroad.js"></script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        --ground: #0d0e12;
+        --surface: #16181f;
+        --surface-2: #1d202a;
+        --ink: #f5f5f7;
+        --ink-2: #c7c7cc;
+        --ink-3: #8e8e93;
+        --hairline: rgba(255, 255, 255, 0.09);
+        --fill: rgba(255, 255, 255, 0.05);
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --accent-glow: rgba(59, 130, 246, 0.25);
+        --green: #34d399;
+        --green-soft: rgba(52, 211, 153, 0.12);
+        --warn: #fbbf24;
+        --warn-soft: rgba(251, 191, 36, 0.12);
+        --red: #f87171;
+        --red-soft: rgba(248, 113, 113, 0.12);
+        --nav: rgba(13, 14, 18, 0.85);
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        --mono: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+        --page: 1120px;
+        --shadow-window: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 20px 50px rgba(0, 0, 0, 0.65), 0 50px 100px rgba(0, 0, 0, 0.5);
+        --shadow-card: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.35);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          color-scheme: light;
+          --ground: #f8fafc;
+          --surface: #ffffff;
+          --surface-2: #f1f5f9;
+          --ink: #0f172a;
+          --ink-2: #475569;
+          --ink-3: #64748b;
+          --hairline: rgba(0, 0, 0, 0.08);
+          --fill: rgba(0, 0, 0, 0.04);
+          --accent: #2563eb;
+          --accent-hover: #1d4ed8;
+          --accent-glow: rgba(37, 99, 235, 0.15);
+          --green: #10b981;
+          --green-soft: rgba(16, 185, 129, 0.1);
+          --warn: #d97706;
+          --warn-soft: rgba(217, 119, 6, 0.1);
+          --red: #ef4444;
+          --red-soft: rgba(239, 68, 68, 0.1);
+          --nav: rgba(248, 250, 252, 0.88);
+          --shadow-window: 0 0 0 0.5px rgba(0, 0, 0, 0.1), 0 20px 48px rgba(0, 0, 0, 0.1), 0 48px 100px rgba(0, 0, 0, 0.08);
+          --shadow-card: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.55;
+        letter-spacing: -0.01em;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      .wrap { max-width: var(--page); margin: 0 auto; padding: 0 24px; }
+
+      /* Navigation */
+      header.nav {
+        position: sticky;
+        top: 0;
+        background: var(--nav);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--hairline);
+        z-index: 100;
+      }
+      .nav-row {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
+      }
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 0.92rem;
+        color: var(--ink-2);
+      }
+      .nav-links a:hover { color: var(--ink); }
+      .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        padding: 9px 18px;
+        border-radius: 9999px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #ffffff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 0 20px var(--accent-glow);
+        transform: translateY(-1px);
+      }
+      .btn-ghost {
+        background: var(--fill);
+        color: var(--ink);
+        border-color: var(--hairline);
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      /* Hero Section */
+      .hero {
+        padding: 80px 0 50px;
+        text-align: center;
+      }
+      .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--fill);
+        border: 1px solid var(--hairline);
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--ink-2);
+        margin-bottom: 24px;
+      }
+      .hero-pill span.dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+      h1.hero-title {
+        font-size: clamp(2.4rem, 5.2vw, 4.2rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.08;
+        max-width: 880px;
+        margin: 0 auto 20px;
+      }
+      h1.hero-title span.gradient {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      p.hero-sub {
+        font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+        color: var(--ink-2);
+        max-width: 680px;
+        margin: 0 auto 36px;
+        line-height: 1.5;
+      }
+      .hero-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+      .hero-meta {
+        font-size: 0.82rem;
+        color: var(--ink-3);
+      }
+
+      /* Interactive Simulator Window (macOS style) */
+      .simulator-wrap {
+        margin: 50px auto 30px;
+        max-width: 960px;
+      }
+      .sim-window {
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 16px;
+        box-shadow: var(--shadow-window);
+        overflow: hidden;
+      }
+      .sim-bar {
+        height: 44px;
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        justify-content: space-between;
+      }
+      .mac-dots {
+        display: flex;
+        gap: 7px;
+      }
+      .mac-dots span {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+      }
+      .dot-red { background: #ff5f56; }
+      .dot-yellow { background: #ffbd2e; }
+      .dot-green { background: #27c93f; }
+      .sim-tabs {
+        display: flex;
+        gap: 6px;
+      }
+      .sim-tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--ink-2);
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .sim-tab-btn.active {
+        background: var(--fill);
+        color: var(--ink);
+      }
+      .sim-body {
+        padding: 24px;
+        min-height: 380px;
+        text-align: left;
+      }
+
+      /* Pre-Flight View Inside Simulator */
+      .deck-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 20px;
+      }
+      .deck-card {
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .deck-card-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-3);
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .badge-live {
+        background: var(--green-soft);
+        color: var(--green);
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+      .badge-err {
+        background: var(--red-soft);
+        color: var(--red);
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      /* Sections */
+      .section {
+        padding: 80px 0;
+        border-top: 1px solid var(--hairline);
+      }
+      .section-head {
+        text-align: center;
+        max-width: 720px;
+        margin: 0 auto 50px;
+      }
+      .section-head h2 {
+        font-size: 2.3rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+      }
+      .section-head p {
+        font-size: 1.1rem;
+        color: var(--ink-2);
+      }
+
+      /* Feature Grid */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+      }
+      .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: var(--shadow-card);
+        transition: transform 0.2s ease;
+      }
+      .feature-card:hover {
+        transform: translateY(-2px);
+      }
+      .feat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--fill);
+        border: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 18px;
+      }
+      .feature-card h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
+      }
+      .feature-card p {
+        font-size: 0.95rem;
+        color: var(--ink-2);
+        line-height: 1.5;
+      }
+
+      /* Comparison Table / Plain English Glossary */
+      .glossary-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .glossary-table th, .glossary-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid var(--hairline);
+        font-size: 0.92rem;
+      }
+      .glossary-table th {
+        background: var(--surface-2);
+        color: var(--ink-3);
+        text-transform: uppercase;
+        font-size: 0.76rem;
+        letter-spacing: 0.06em;
+      }
+      .code-pill {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--red);
+        padding: 2px 7px;
+        border-radius: 5px;
+      }
+
+      /* Pricing Section */
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+        max-width: 820px;
+        margin: 0 auto;
+      }
+      .pricing-card {
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 16px;
+        padding: 36px 30px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .pricing-card.featured {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent), var(--shadow-window);
+      }
+      .p-badge {
+        position: absolute;
+        top: -12px;
+        right: 24px;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 3px 10px;
+        border-radius: 9999px;
+      }
+      .p-plan { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+      .p-price { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+      .p-price span { font-size: 0.95rem; font-weight: 500; color: var(--ink-3); }
+      .p-desc { font-size: 0.92rem; color: var(--ink-2); margin-bottom: 24px; }
+      .p-features {
+        list-style: none;
+        margin-bottom: 30px;
+        flex-grow: 1;
+      }
+      .p-features li {
+        font-size: 0.92rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .p-check { color: var(--green); font-weight: 700; }
+
+      /* Suite Synergy Banner */
+      .suite-banner {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
+        border: 1px solid var(--hairline);
+        border-radius: 16px;
+        padding: 36px;
+        margin-top: 60px;
+        text-align: center;
+      }
+      .suite-triad {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+      .triad-card {
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 14px;
+        padding: 22px 24px;
+        min-width: 260px;
+        max-width: 330px;
+        flex: 1;
+        text-align: left;
+        color: var(--ink);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+      }
+      .triad-card.clickable {
+        cursor: pointer;
+      }
+      .triad-card.clickable:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        background: var(--surface-2);
+      }
+      .triad-card.active-product {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent), 0 8px 24px var(--accent-glow);
+        background: rgba(59, 130, 246, 0.04);
+      }
+      .triad-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .triad-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+      .triad-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        background: var(--fill);
+        border: 1px solid var(--hairline);
+        color: var(--ink-2);
+      }
+      .triad-card.clickable:hover .triad-badge {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* Footer */
+      footer {
+        padding: 50px 0 30px;
+        border-top: 1px solid var(--hairline);
+        color: var(--ink-3);
+        font-size: 0.88rem;
+        text-align: center;
+      }
+      footer a:hover { color: var(--ink); }
+    </style>
+  </head>
+  <body>
+    <!-- Top Nav -->
+    <header class="nav">
+      <div class="wrap nav-row">
+        <a href="#" class="logo">
+          <div class="logo-icon">🚀</div>
+          <span>ShipWizard</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#plain-english">Error Glossary</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#suite">Calm Suite</a>
+        </nav>
+        <div class="nav-actions">
+          <a
+            class="btn btn-primary gumroad-button"
+            href="https://kashyapster867.gumroad.com/l/shipwizard"
+            target="_blank"
+          >Get Pro ($9.99)</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-pill">
+          <span class="dot"></span>
+          <span>The 'Get It Live' Pre-Flight Engine</span>
+        </div>
+        <h1 class="hero-title">
+          1-Click Secure Test Links &amp; <span class="gradient">Auto-Healing Builds</span>
+        </h1>
+        <p class="hero-sub">
+          Stop panicking over cryptic TypeScript and bundle errors on Vercel or Cloudflare. ShipWizard catches build blockers before deploy, translates them to plain English, and provides an instant 1-click shareable tunnel for mobile testing.
+        </p>
+        <div class="hero-buttons">
+          <a
+            class="btn btn-primary"
+            href="https://marketplace.visualstudio.com"
+            target="_blank"
+          >⚡ Install for Cursor &amp; VS Code</a>
+          <a
+            class="btn btn-ghost gumroad-button"
+            href="https://kashyapster867.gumroad.com/l/shipwizard"
+            target="_blank"
+          >Buy Lifetime License ($9.99) →</a>
+        </div>
+        <p class="hero-meta">
+          Zero Subscriptions · 1-Time Purchase · 100% Free Cloudflare Quick Tunnels Included
+        </p>
+
+        <!-- Interactive Simulator (macOS Style) -->
+        <div class="simulator-wrap">
+          <div class="sim-window">
+            <div class="sim-bar">
+              <div class="mac-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+              </div>
+              <div class="sim-tabs">
+                <button class="sim-tab-btn active" onclick="switchSimTab('preflight')">Pre-Flight Radar</button>
+                <button class="sim-tab-btn" onclick="switchSimTab('tunnel')">Instant Live Link &amp; QR</button>
+                <button class="sim-tab-btn" onclick="switchSimTab('translator')">Plain-English Cards</button>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--ink-3);">VS Code / Cursor / Antigravity</div>
+            </div>
+
+            <div class="sim-body" id="simContent">
+              <!-- Default Pre-Flight Content -->
+              <div class="deck-grid">
+                <div class="deck-card">
+                  <div class="deck-card-title">
+                    <span>Pre-Flight Radar</span>
+                    <span class="badge-err">1 Build Blocker</span>
+                  </div>
+                  <div style="background: rgba(248, 113, 113, 0.1); border-left: 3px solid var(--red); padding: 12px; border-radius: 6px; margin-bottom: 14px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--red);">⚛️ Missing "use client"</div>
+                    <div style="font-size: 0.88rem; font-weight: 600; margin: 3px 0;">Interactive Hook in Server Component</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-2);">app/dashboard/Chart.tsx uses useState() but lacks the client directive. Vercel build will fail.</div>
+                  </div>
+                  <button class="btn btn-primary" style="width: 100%;" onclick="simHeal()">🪄 1-Click Auto-Heal File</button>
+                </div>
+
+                <div class="deck-card">
+                  <div class="deck-card-title">
+                    <span>Shareable Preview Link</span>
+                    <span class="badge-live">Live</span>
+                  </div>
+                  <div style="font-size: 0.82rem; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; color: var(--accent); margin-bottom: 10px;">
+                    https://purple-falcon-ship.trycloudflare.com
+                  </div>
+                  <div style="text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 0.82rem; color: var(--ink-2); margin-bottom: 6px;">📱 Instant Mobile Testing</div>
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                      <rect width="100" height="100" fill="#1d202a" rx="8"/>
+                      <rect x="15" y="15" width="25" height="25" fill="#60a5fa"/>
+                      <rect x="60" y="15" width="25" height="25" fill="#60a5fa"/>
+                      <rect x="15" y="60" width="25" height="25" fill="#60a5fa"/>
+                      <circle cx="50" cy="50" r="10" fill="#34d399"/>
+                    </svg>
+                    <div style="font-size: 0.75rem; color: var(--ink-3); margin-top: 6px;">Scan with phone camera</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Built Specifically for Vibe Coders</h2>
+          <p>You write fast, creative code with AI. ShipWizard ensures it actually compiles and deploys.</p>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feat-icon">⚡</div>
+            <h3>Pre-Flight Dry Run</h3>
+            <p>Runs non-destructive dry checks (`tsc --noEmit`, Next.js route checks, missing env references) in under 2 seconds before you push.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon">🌐</div>
+            <h3>1-Click Free Cloudflare Tunnel</h3>
+            <p>Generates an instant public HTTPS test link (`trycloudflare.com`) without creating accounts, entering credit cards, or installing ngrok tokens.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon">📱</div>
+            <h3>Mobile Test Deck &amp; QR Code</h3>
+            <p>Renders a crisp SVG QR code right in your editor sidebar. Scan with your phone to instantly test mobile layouts and responsive vibes.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon">🗣️</div>
+            <h3>Plain-English Error Cards</h3>
+            <p>No more cryptic `TS2307` or `TS2322` terminal dumps. Every error is translated into human English explaining what broke and why.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon">🪄</div>
+            <h3>Safe Deterministic Auto-Healing</h3>
+            <p>1-Click automated fixes for missing client directives, environment variable leaks (`NEXT_PUBLIC_`), and import paths with full rollback safety.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon">🛡️</div>
+            <h3>Zero Data Loss Shield</h3>
+            <p>ShipWizard never mutates code destructively. Every patch records an in-memory rollback backup so you can undo in 100ms.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Plain English Glossary Section -->
+    <section class="section" id="plain-english">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Compiler Cryptic Speak vs. Plain English</h2>
+          <p>We translate panic-inducing terminal walls into calm, solvable cards.</p>
+        </div>
+
+        <table class="glossary-table">
+          <thead>
+            <tr>
+              <th>Raw Compiler Trace</th>
+              <th>Plain-English Translation</th>
+              <th>1-Click Fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-pill">TS2307: Cannot find module '@/components/Btn'</span></td>
+              <td>Missing file or typo in your import path. Vercel bundler will halt.</td>
+              <td><strong>Fix import path</strong></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">Next.js: useState used in Server Component</span></td>
+              <td>React hooks and click events require client rendering in App Router.</td>
+              <td><strong>Prepend 'use client'</strong></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">Client access to process.env.API_KEY</span></td>
+              <td>Secret is missing `NEXT_PUBLIC_` prefix and will be undefined in production.</td>
+              <td><strong>Prefix with NEXT_PUBLIC_</strong></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">TS2339: Property 'avatar' does not exist</span></td>
+              <td>Accessing a property that might be null or missing at runtime.</td>
+              <td><strong>Insert optional chaining (?.)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section" id="pricing">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Simple, Transparent Pricing</h2>
+          <p>Zero recurring subscriptions. Pay once, own it forever.</p>
+        </div>
+
+        <div class="pricing-grid">
+          <!-- Free Tier -->
+          <div class="pricing-card">
+            <div class="p-plan">Free</div>
+            <div class="p-price">$0</div>
+            <div class="p-desc">Essential pre-flight checks and manual tunnels for every developer.</div>
+            <ul class="p-features">
+              <li><span class="p-check">✓</span> <strong>Local pre-flight dry runs (tsc &amp; bundlers)</strong></li>
+              <li><span class="p-check">✓</span> <strong>1-Click Cloudflare Quick Tunnels (trycloudflare.com)</strong></li>
+              <li><span class="p-check">✓</span> <strong>In-IDE Mobile QR Code generator</strong></li>
+              <li><span class="p-check">✓</span> <strong>Plain-English Error Translator</strong></li>
+              <li><span class="p-check">✓</span> <strong>Manual 1-click auto-healers</strong></li>
+            </ul>
+            <a
+              class="btn btn-ghost"
+              href="https://marketplace.visualstudio.com"
+              target="_blank"
+            >Install Extension Free</a>
+          </div>
+
+          <!-- Pro Lifetime -->
+          <div class="pricing-card featured">
+            <div class="p-badge">Lifetime Access</div>
+            <div class="p-plan">Pro Lifetime</div>
+            <div class="p-price">$9.99 <span>/ one-time</span></div>
+            <div class="p-desc">Autonomous protection and zero-friction deploy pipelines for heavy vibe coders.</div>
+            <ul class="p-features">
+              <li><span class="p-check">✓</span> <strong>Everything in Free</strong></li>
+              <li><span class="p-check">✓</span> <strong>Automated AST auto-healing on save</strong></li>
+              <li><span class="p-check">✓</span> <strong>BYOK 1-Click Cloud Deploy (Vercel &amp; Cloudflare)</strong></li>
+              <li><span class="p-check">✓</span> <strong>Password-protected tunnels &amp; custom subdomains</strong></li>
+              <li><span class="p-check">✓</span> <strong>Use on up to 3 personal machines</strong></li>
+              <li><span class="p-check">✓</span> <strong>Lifetime updates included</strong></li>
+            </ul>
+            <a
+              class="btn btn-primary gumroad-button"
+              href="https://kashyapster867.gumroad.com/l/shipwizard"
+              target="_blank"
+            >🚀 Buy Pro — $9.99</a>
+          </div>
+        </div>
+
+        <!-- The Calm Dev Suite Triad -->
+        <div class="suite-banner" id="suite">
+          <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 8px;">
+            The Calm Dev Suite
+          </div>
+          <h3 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;">Complete Harmony for Vibe Coders</h3>
+          <p style="color: var(--ink-2); max-width: 600px; margin: 8px auto 0;">
+            ShipWizard works hand-in-hand with its sibling extensions to give you a stress-free dev lifecycle:
+          </p>
+          <div class="suite-triad">
+            <!-- GitWizard (VS Code Extension link) -->
+            <a
+              href="https://marketplace.visualstudio.com/items?itemName=dr-opensource.gitwizard"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="triad-card clickable"
+              title="View GitWizard on VS Code Marketplace"
+            >
+              <div class="triad-card-head">
+                <span class="triad-title">🧙‍♂️ GitWizard</span>
+                <span class="triad-badge">Extension ↗</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--ink-2); line-height: 1.45;">
+                Protects git history, auto-saves against AI overwrites, and provides 1-click undos.
+              </div>
+            </a>
+
+            <!-- EnvWizard (Website link) -->
+            <a
+              href="https://envwizard.taqnik.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="triad-card clickable"
+              title="Visit EnvWizard Website"
+            >
+              <div class="triad-card-head">
+                <span class="triad-title">🔌 EnvWizard</span>
+                <span class="triad-badge">Website ↗</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--ink-2); line-height: 1.45;">
+                Unjams blocked ports (:3000, :5173), kills zombie servers, and heals missing .env secrets.
+              </div>
+            </a>
+
+            <!-- ShipWizard (Current Active Product) -->
+            <div class="triad-card active-product">
+              <div class="triad-card-head">
+                <span class="triad-title" style="color: var(--accent);">🚀 ShipWizard</span>
+                <span class="triad-badge" style="background: var(--accent); color: #ffffff; border-color: var(--accent);">You Are Here</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--ink-2); line-height: 1.45;">
+                Validates production builds and gives you instant 1-click shareable preview tunnels.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="wrap">
+        <p>© 2026 ShipWizard · Built with calm for vibe coders · MIT License</p>
+        <p style="margin-top: 10px; font-size: 0.88rem;">
+          <a href="/privacy.html">Privacy Policy</a> · 
+          <a href="/eula.html">Terms &amp; EULA</a> · 
+          <a href="https://envwizard.taqnik.in" target="_blank" rel="noopener">EnvWizard</a> · 
+          <a href="https://marketplace.visualstudio.com/items?itemName=dr-opensource.gitwizard" target="_blank" rel="noopener">GitWizard</a>
+        </p>
+      </div>
+    </footer>
+
+    <!-- Interactive Simulator JS -->
+    <script>
+      function switchSimTab(tab) {
+        const buttons = document.querySelectorAll('.sim-tab-btn');
+        buttons.forEach(b => b.classList.remove('active'));
+
+        const content = document.getElementById('simContent');
+        if (tab === 'preflight') {
+          buttons[0].classList.add('active');
+          content.innerHTML = `
+            <div class="deck-grid">
+              <div class="deck-card">
+                <div class="deck-card-title">
+                  <span>Pre-Flight Radar</span>
+                  <span class="badge-err">1 Build Blocker</span>
+                </div>
+                <div style="background: rgba(248, 113, 113, 0.1); border-left: 3px solid var(--red); padding: 12px; border-radius: 6px; margin-bottom: 14px;">
+                  <div style="font-size: 0.8rem; font-weight: 700; color: var(--red);">⚛️ Missing "use client"</div>
+                  <div style="font-size: 0.88rem; font-weight: 600; margin: 3px 0;">Interactive Hook in Server Component</div>
+                  <div style="font-size: 0.8rem; color: var(--ink-2);">app/dashboard/Chart.tsx uses useState() but lacks the client directive. Vercel build will fail.</div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="simHeal()">🪄 1-Click Auto-Heal File</button>
+              </div>
+              <div class="deck-card">
+                <div class="deck-card-title">
+                  <span>Shareable Preview Link</span>
+                  <span class="badge-live">Live</span>
+                </div>
+                <div style="font-size: 0.82rem; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; color: var(--accent); margin-bottom: 10px;">
+                  https://purple-falcon-ship.trycloudflare.com
+                </div>
+                <div style="text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                  <div style="font-size: 0.82rem; color: var(--ink-2); margin-bottom: 6px;">📱 Instant Mobile Testing</div>
+                  <svg width="100" height="100" viewBox="0 0 100 100">
+                    <rect width="100" height="100" fill="#1d202a" rx="8"/>
+                    <rect x="15" y="15" width="25" height="25" fill="#60a5fa"/>
+                    <rect x="60" y="15" width="25" height="25" fill="#60a5fa"/>
+                    <rect x="15" y="60" width="25" height="25" fill="#60a5fa"/>
+                    <circle cx="50" cy="50" r="10" fill="#34d399"/>
+                  </svg>
+                </div>
+              </div>
+            </div>`;
+        } else if (tab === 'tunnel') {
+          buttons[1].classList.add('active');
+          content.innerHTML = `
+            <div style="text-align: center; max-width: 480px; margin: 20px auto;">
+              <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">🌐 Live Shareable Cloudflare Tunnel</div>
+              <p style="color: var(--ink-2); font-size: 0.9rem; margin-bottom: 16px;">
+                Secure HTTPS tunnel connected to your local port 3000. No accounts, zero configuration.
+              </p>
+              <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; color: var(--accent); margin-bottom: 16px;">
+                https://calm-vibe-preview-88.trycloudflare.com
+              </div>
+              <button class="btn btn-primary" onclick="alert('Copied demo URL to clipboard!')">📋 Copy Live Link</button>
+            </div>`;
+        } else if (tab === 'translator') {
+          buttons[2].classList.add('active');
+          content.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 14px;">
+                <span class="code-pill">TS2322</span>
+                <span style="font-weight: 700; margin-left: 8px;">Value Type Does Not Match</span>
+                <p style="font-size: 0.85rem; color: var(--ink-2); margin-top: 4px;">You passed a text string into a property expecting a number. In strict production builds, this prevents runtime math calculation crashes.</p>
+              </div>
+              <div style="background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 14px;">
+                <span class="code-pill">ENV_LEAK</span>
+                <span style="font-weight: 700; margin-left: 8px;">Missing NEXT_PUBLIC_ Prefix</span>
+                <p style="font-size: 0.85rem; color: var(--ink-2); margin-top: 4px;">Client component reads process.env.API_SECRET. In production Next.js bundles, this will be silently undefined for security.</p>
+              </div>
+            </div>`;
+        }
+      }
+
+      function simHeal() {
+        const content = document.getElementById('simContent');
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 2.2rem; margin-bottom: 12px;">✨</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: var(--green); margin-bottom: 8px;">Build Auto-Healed!</div>
+            <p style="color: var(--ink-2); font-size: 0.95rem; max-width: 450px; margin: 0 auto 20px;">
+              Prepended "'use client';" to app/dashboard/Chart.tsx. Re-ran pre-flight compiler dry run: 0 blockers found.
+            </p>
+            <div class="badge-live" style="font-size: 0.9rem; padding: 6px 16px;">🚀 Ready to Ship to Vercel &amp; Cloudflare</div>
+          </div>`;
+      }
+    </script>
+  </body>
+</html>

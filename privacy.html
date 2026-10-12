@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Privacy Policy — ShipWizard</title>
+    <meta
+      name="description"
+      content="Privacy Policy for ShipWizard. 100% offline-first pre-flight engine with zero telemetry and zero code collection."
+    />
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href="https://shipwizard.taqnik.in/privacy.html" />
+    <script src="https://gumroad.com/js/gumroad.js"></script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        --ground: #0d0e12;
+        --surface: #16181f;
+        --surface-2: #1d202a;
+        --ink: #f5f5f7;
+        --ink-2: #c7c7cc;
+        --ink-3: #8e8e93;
+        --hairline: rgba(255, 255, 255, 0.09);
+        --fill: rgba(255, 255, 255, 0.05);
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --accent-glow: rgba(59, 130, 246, 0.25);
+        --green: #34d399;
+        --green-soft: rgba(52, 211, 153, 0.12);
+        --nav: rgba(13, 14, 18, 0.85);
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        --mono: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+        --page: 860px;
+        --shadow-card: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.35);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          color-scheme: light;
+          --ground: #f8fafc;
+          --surface: #ffffff;
+          --surface-2: #f1f5f9;
+          --ink: #0f172a;
+          --ink-2: #475569;
+          --ink-3: #64748b;
+          --hairline: rgba(0, 0, 0, 0.08);
+          --fill: rgba(0, 0, 0, 0.04);
+          --accent: #2563eb;
+          --accent-hover: #1d4ed8;
+          --accent-glow: rgba(37, 99, 235, 0.15);
+          --green: #10b981;
+          --green-soft: rgba(16, 185, 129, 0.1);
+          --nav: rgba(248, 250, 252, 0.88);
+          --shadow-card: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.65;
+        letter-spacing: -0.01em;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .wrap { max-width: var(--page); margin: 0 auto; padding: 0 24px; }
+
+      /* Navigation */
+      header.nav {
+        position: sticky;
+        top: 0;
+        background: var(--nav);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--hairline);
+        z-index: 100;
+      }
+      .nav-row {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        font-size: 0.92rem;
+        color: var(--ink-2);
+      }
+      .nav-links a { color: var(--ink-2); }
+      .nav-links a:hover { color: var(--ink); text-decoration: none; }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        text-decoration: none !important;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #ffffff !important;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 0 20px var(--accent-glow);
+        transform: translateY(-1px);
+      }
+
+      /* Legal Content Layout */
+      .legal-hero {
+        padding: 60px 0 30px;
+        text-align: center;
+      }
+      .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--fill);
+        border: 1px solid var(--hairline);
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      h1.title {
+        font-size: clamp(2.2rem, 4vw, 3.2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        margin-bottom: 12px;
+      }
+      p.subtitle {
+        font-size: 1.05rem;
+        color: var(--ink-2);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .content-body {
+        padding: 20px 0 80px;
+      }
+      .legal-card {
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 14px;
+        padding: 32px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-card);
+      }
+      .legal-card h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 12px;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .legal-card p {
+        color: var(--ink-2);
+        margin-bottom: 14px;
+      }
+      .legal-card p:last-child { margin-bottom: 0; }
+      .legal-card ul {
+        margin: 12px 0 16px 20px;
+        color: var(--ink-2);
+      }
+      .legal-card li { margin-bottom: 8px; }
+
+      .highlight-box {
+        background: var(--green-soft);
+        border: 1px solid rgba(52, 211, 153, 0.25);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 16px 0;
+        color: var(--ink);
+      }
+      .highlight-box strong { color: var(--green); }
+
+      /* Footer */
+      footer {
+        padding: 40px 0;
+        border-top: 1px solid var(--hairline);
+        color: var(--ink-3);
+        font-size: 0.88rem;
+        text-align: center;
+      }
+      footer a { color: var(--ink-2); margin: 0 8px; }
+      footer a:hover { color: var(--ink); }
+    </style>
+  </head>
+  <body>
+    <!-- Top Nav -->
+    <header class="nav">
+      <div class="wrap nav-row">
+        <a href="/" class="logo">
+          <div class="logo-icon">🚀</div>
+          <span>ShipWizard</span>
+        </a>
+        <nav class="nav-links">
+          <a href="/">Home</a>
+          <a href="/#features">Features</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/eula.html">Terms &amp; EULA</a>
+        </nav>
+        <div>
+          <a
+            class="btn btn-primary gumroad-button"
+            href="https://kashyapster867.gumroad.com/l/shipwizard"
+            target="_blank"
+          >Get Pro ($9.99)</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="wrap">
+      <section class="legal-hero">
+        <div class="badge-pill">🛡️ Legal &amp; Privacy</div>
+        <h1 class="title">Privacy Policy</h1>
+        <p class="subtitle">
+          Effective Date: October 2026 · Zero Telemetry · Local-First Architecture
+        </p>
+      </section>
+
+      <div class="content-body">
+        <div class="highlight-box">
+          <strong>The Calm Privacy Guarantee:</strong> ShipWizard was built for developers who care about code privacy. We do not track, collect, upload, or sell your source code, files, or environment secrets. Everything runs locally on your machine.
+        </div>
+
+        <div class="legal-card">
+          <h2>1. Zero Remote Code Transmission</h2>
+          <p>
+            ShipWizard performs non-destructive pre-flight compiler dry runs (<code>tsc --noEmit</code>, AST inspections, framework bundle checks) <strong>strictly locally within your editor process</strong>.
+          </p>
+          <p>
+            No part of your source code, components, file names, or project contents is ever sent to any remote server, analytics provider, or third-party cloud endpoint.
+          </p>
+        </div>
+
+        <div class="legal-card">
+          <h2>2. Environment Secrets &amp; Configuration Safety</h2>
+          <p>
+            When ShipWizard audits your workspace for missing environment variables or client-side secret exposure (such as verifying <code>NEXT_PUBLIC_</code> prefixes), all checks occur entirely in-memory on your local CPU.
+          </p>
+          <ul>
+            <li>We never read secret values into external network packets.</li>
+            <li>We do not record, store, or transmit your <code>.env</code> file contents.</li>
+            <li>All auto-heals are applied directly to local files on your disk with in-memory rollback snapshots.</li>
+          </ul>
+        </div>
+
+        <div class="legal-card">
+          <h2>3. Public Preview Tunnels (Cloudflare Quick Tunnels)</h2>
+          <p>
+            When you explicitly choose to launch an instant shareable link, ShipWizard spawns a local <code>cloudflared</code> sub-process connecting your designated local dev port to Cloudflare's public Quick Tunnel infrastructure (<code>trycloudflare.com</code>).
+          </p>
+          <ul>
+            <li><strong>Encrypted Transport</strong>: Tunnels are protected with Cloudflare SSL/TLS encryption.</li>
+            <li><strong>Direct Routing</strong>: Network packets flow directly between Cloudflare's edge network and your local machine. ShipWizard does not operate intermediate logging servers or proxy interception.</li>
+            <li><strong>User Control</strong>: Tunnels can be stopped instantly at any time via the 1-click "Stop Tunnel" button in the extension or webview deck.</li>
+          </ul>
+        </div>
+
+        <div class="legal-card">
+          <h2>4. License Validation &amp; Payments</h2>
+          <p>
+            If you purchase <strong>ShipWizard Pro Lifetime ($9.99 One-Time)</strong>, your transaction is processed securely through <strong>Gumroad</strong>. We do not store or process your credit card numbers or financial details.
+          </p>
+          <ul>
+            <li><strong>Offline Cryptographic Verification</strong>: Pro licenses can be validated completely offline on your computer using cryptographic HMAC signatures without needing an internet connection.</li>
+            <li><strong>Online Gumroad Verification</strong>: If validated online, only your license key string is sent to Gumroad's official API (<code>api.gumroad.com</code>) to verify validity. No device telemetry, workspace metadata, or code statistics are transmitted.</li>
+            <li><strong>Device Activation</strong>: Your license allows activation on up to three (3) personal developer machines.</li>
+          </ul>
+        </div>
+
+        <div class="legal-card">
+          <h2>5. Third-Party Integrations</h2>
+          <p>
+            ShipWizard integrates with minimal, industry-standard developer platforms:
+          </p>
+          <ul>
+            <li><strong>Gumroad</strong>: Payment processing and license key issuance. (<a href="https://gumroad.com/privacy" target="_blank" rel="noopener">Gumroad Privacy Policy</a>)</li>
+            <li><strong>Cloudflare</strong>: Edge tunnel infrastructure and documentation hosting. (<a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a>)</li>
+            <li><strong>VS Code / Cursor / Open VSX Marketplace</strong>: Extension distribution platforms.</li>
+          </ul>
+        </div>
+
+        <div class="legal-card">
+          <h2>6. Data Retention &amp; User Rights</h2>
+          <p>
+            Because ShipWizard collects zero telemetry and retains zero server-side databases of your personal coding sessions, there is no personal user profile to delete or export. You have complete sovereignty over your local editor and codebase.
+          </p>
+        </div>
+
+        <div class="legal-card">
+          <h2>7. Contact Information</h2>
+          <p>
+            If you have any questions or feedback regarding this Privacy Policy, please contact our team:
+          </p>
+          <p>
+            Email: <a href="mailto:taqnikin@gmail.com">taqnikin@gmail.com</a><br />
+            Website: <a href="https://shipwizard.taqnik.in">shipwizard.taqnik.in</a>
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="wrap">
+        <p>© 2026 ShipWizard · Built with calm for vibe coders · MIT License</p>
+        <p style="margin-top: 8px;">
+          <a href="/">Home</a> · 
+          <a href="/privacy.html">Privacy Policy</a> · 
+          <a href="/eula.html">Terms &amp; EULA</a> · 
+          <a href="https://envwizard.taqnik.in" target="_blank">EnvWizard</a> · 
+          <a href="https://marketplace.visualstudio.com/items?itemName=dr-opensource.gitwizard" target="_blank">GitWizard</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
