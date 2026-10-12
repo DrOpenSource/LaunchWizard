@@ -4,6 +4,7 @@ import type { LicenseState, LicenseTier } from '../shared/types.js';
 export class LicenseManager {
   private static readonly SALT = 'SHIPWIZARD_DR_OPENSOURCE_LIFETIME_SECRET_2026';
   private static readonly PRODUCT_PERMALINK = 'shipwizard';
+  private static readonly PRODUCT_ID = '5jmErjhP_JXqeLXQtq5TgA==';
   private static readonly GUMROAD_VERIFY_ENDPOINT = 'https://api.gumroad.com/v2/licenses/verify';
 
   private tier: LicenseTier = 'free';
@@ -37,7 +38,7 @@ export class LicenseManager {
   public async activateLicense(key: string): Promise<{ success: boolean; message: string }> {
     const trimmed = key.trim();
 
-    // 1. Format check: SHIP-PRO-XXXX-XXXX or Gumroad UUID
+    // 1. Format check: SHIP-PRO-XXXX-XXXX or Gumroad Key (8-8-8-8 or UUID)
     if (!this.validateKeyPattern(trimmed)) {
       return {
         success: false,
@@ -69,6 +70,7 @@ export class LicenseManager {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           product_permalink: LicenseManager.PRODUCT_PERMALINK,
+          product_id: LicenseManager.PRODUCT_ID,
           license_key: trimmed,
         }),
       });
@@ -90,8 +92,8 @@ export class LicenseManager {
         message: 'Gumroad license key verification failed or key is expired/revoked.',
       };
     } catch {
-      // Offline fallback: If network is offline, accept valid UUID structure gracefully
-      if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(trimmed)) {
+      // Offline fallback: If network is offline, accept valid Gumroad key structure gracefully
+      if (this.isGumroadKeyFormat(trimmed)) {
         this.tier = 'pro';
         this.licenseKey = trimmed;
         this.activatedAt = Date.now();
@@ -109,13 +111,22 @@ export class LicenseManager {
   }
 
   /**
-   * Validates key format (SHIP-PRO-XXXX-XXXX or standard UUID).
+   * Validates key format (SHIP-PRO-XXXX-XXXX, Gumroad 8-8-8-8, or standard UUID).
    */
   public validateKeyPattern(key: string): boolean {
     if (!key) return false;
     const isShipKey = /^SHIP-PRO-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}$/i.test(key);
+    return isShipKey || this.isGumroadKeyFormat(key);
+  }
+
+  /**
+   * Checks if string matches Gumroad license key formats (8-8-8-8 hex blocks or UUID).
+   */
+  public isGumroadKeyFormat(key: string): boolean {
+    if (!key) return false;
+    const isGumroad8x4 = /^[a-f0-9]{8}-[a-f0-9]{8}-[a-f0-9]{8}-[a-f0-9]{8}$/i.test(key);
     const isUuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(key);
-    return isShipKey || isUuid;
+    return isGumroad8x4 || isUuid;
   }
 
   /**

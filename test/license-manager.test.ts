@@ -15,6 +15,8 @@ describe('LicenseManager', () => {
 
     expect(manager.validateKeyPattern('SHIP-PRO-ABCD12-E5F6A7')).toBe(true);
     expect(manager.validateKeyPattern('c8a41234-abcd-4a3b-9e21-0123456789ab')).toBe(true);
+    // Gumroad 8-8-8-8 format
+    expect(manager.validateKeyPattern('6F0E4C97-B72A4E69-A11BF6C4-AF6517E7')).toBe(true);
     expect(manager.validateKeyPattern('invalid-key')).toBe(false);
     expect(manager.validateKeyPattern('')).toBe(false);
   });
