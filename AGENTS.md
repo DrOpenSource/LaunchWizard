@@ -88,3 +88,18 @@ LaunchWizard completes the developer safety triad alongside [GitWizard](https://
 3. **LaunchWizard**: Ensures your code compiles cleanly for production and gives you an instant 1-click shareable preview tunnel to share with clients or test on your phone.
 
 Shared visual aesthetic: dark-mode glassmorphic styling, non-blocking toasts, zero noise, and 1-click intent triggers.
+
+---
+
+## 4. Project-Level Memory & Decision Architecture
+
+LaunchWizard maintains a centralized memory architecture for state, versioning, context, and architectural decisions. All agents MUST consult and update these documents:
+
+- **Root Anchor**: [`MEMORY.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/MEMORY.md)
+- **Master Index**: [`docs/memory/INDEX.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/INDEX.md)
+- **System Context & Tenets**: [`docs/memory/CONTEXT.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/CONTEXT.md)
+- **Roadmap & Sprints**: [`docs/memory/ROADMAP.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/ROADMAP.md)
+- **Versioning & Releases**: [`docs/memory/VERSIONING.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/VERSIONING.md)
+- **Architectural Decision Records**: [`docs/memory/DECISIONS.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/DECISIONS.md) & [`docs/memory/decisions/`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/decisions/)
+- **Known Issues & Bug Ledger**: [`docs/memory/KNOWN_ISSUES.md`](file:///c:/Users/user/Desktop/Dr_OpenSource/Projects/ShipWizard/docs/memory/KNOWN_ISSUES.md)
+

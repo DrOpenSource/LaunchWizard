@@ -63,7 +63,7 @@ export type TunnelStatus = 'idle' | 'starting' | 'active' | 'error' | 'stopped';
 export interface TunnelInfo {
   url: string;
   localPort: number;
-  provider: 'cloudflare' | 'localtunnel' | 'custom';
+  provider: 'cloudflare' | 'localhost.run' | 'localtunnel' | 'custom';
   qrCodeSvg: string;
   startedAt: number;
   uptimeSeconds: number;

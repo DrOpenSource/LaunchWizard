@@ -5,8 +5,9 @@ import type { TunnelInfo } from '../shared/types.js';
 
 export interface TunnelOptions {
   port: number;
-  provider?: 'cloudflare' | 'localtunnel';
+  provider?: 'cloudflare' | 'localhost.run' | 'localtunnel';
   timeoutMs?: number;
+  allowFallback?: boolean;
 }
 
 export class TunnelManager {
@@ -19,6 +20,20 @@ export class TunnelManager {
   public static isCloudflaredAvailable(): boolean {
     try {
       const cmd = process.platform === 'win32' ? 'where.exe cloudflared' : 'which cloudflared';
+      execSync(cmd, { stdio: 'ignore', timeout: 2000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Checks whether the OpenSSH binary is installed and present in system PATH.
+   * Windows 10/11 includes ssh.exe by default at C:\Windows\System32\OpenSSH\ssh.exe.
+   */
+  public static isSshAvailable(): boolean {
+    try {
+      const cmd = process.platform === 'win32' ? 'where.exe ssh' : 'which ssh';
       execSync(cmd, { stdio: 'ignore', timeout: 2000 });
       return true;
     } catch {
@@ -49,7 +64,8 @@ export class TunnelManager {
   }
 
   /**
-   * Starts a zero-config tunnel pointing to localPort (Cloudflare Quick Tunnel or Localtunnel fallback).
+   * Starts a zero-config tunnel pointing to localPort.
+   * Priority: Cloudflare Quick Tunnel -> Localhost.run (OpenSSH) -> Localtunnel fallback.
    */
   public static async startTunnel(options: TunnelOptions): Promise<TunnelInfo> {
     // If a tunnel is already active on the same port, return it
@@ -62,15 +78,38 @@ export class TunnelManager {
       this.stopTunnel();
     }
 
-    const { port, timeoutMs = 35000 } = options;
+    const { port, timeoutMs = 45000, allowFallback = true } = options;
 
-    const preferredProvider: 'cloudflare' | 'localtunnel' =
-      options.provider || (this.isCloudflaredAvailable() ? 'cloudflare' : 'localtunnel');
+    let preferredProvider: 'cloudflare' | 'localhost.run' | 'localtunnel' = options.provider || 'cloudflare';
+    if (!options.provider) {
+      if (this.isCloudflaredAvailable()) {
+        preferredProvider = 'cloudflare';
+      } else if (this.isSshAvailable()) {
+        preferredProvider = 'localhost.run';
+      } else {
+        preferredProvider = 'localtunnel';
+      }
+    }
 
-    return this.spawnTunnelWithProvider(preferredProvider, port, timeoutMs, !options.provider);
+    return this.spawnTunnelWithProvider(preferredProvider, port, timeoutMs, allowFallback);
   }
 
-  private static launchProcess(provider: 'cloudflare' | 'localtunnel', port: number): ChildProcess {
+  private static getNextFallbackProvider(
+    current: 'cloudflare' | 'localhost.run' | 'localtunnel'
+  ): 'cloudflare' | 'localhost.run' | 'localtunnel' | null {
+    if (current === 'cloudflare') {
+      return this.isSshAvailable() ? 'localhost.run' : 'localtunnel';
+    }
+    if (current === 'localhost.run') {
+      return 'localtunnel';
+    }
+    return null;
+  }
+
+  private static launchProcess(
+    provider: 'cloudflare' | 'localhost.run' | 'localtunnel',
+    port: number
+  ): ChildProcess {
     if (provider === 'cloudflare') {
       return spawn('cloudflared', ['tunnel', '--url', `http://127.0.0.1:${port}`], {
         shell: true,
@@ -78,8 +117,22 @@ export class TunnelManager {
       });
     }
 
+    if (provider === 'localhost.run') {
+      const nullDevice = process.platform === 'win32' ? 'NUL' : '/dev/null';
+      return spawn('ssh', [
+        '-o', 'StrictHostKeyChecking=no',
+        '-o', `UserKnownHostsFile=${nullDevice}`,
+        '-R', `80:127.0.0.1:${port}`,
+        'nokey@localhost.run',
+      ], {
+        shell: false,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
+
     // Localtunnel via npx (zero account, zero local installation required)
-    const cmd = `npx --yes localtunnel --port ${port}`;
+    // Explicitly bind to 127.0.0.1 to avoid IPv6 [::1] Bad Gateway (ECONNREFUSED) errors on Windows
+    const cmd = `npx --yes localtunnel --port ${port} --local-host 127.0.0.1`;
     return spawn(cmd, {
       shell: true,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -87,7 +140,7 @@ export class TunnelManager {
   }
 
   private static spawnTunnelWithProvider(
-    provider: 'cloudflare' | 'localtunnel',
+    provider: 'cloudflare' | 'localhost.run' | 'localtunnel',
     port: number,
     timeoutMs: number,
     allowFallback: boolean
@@ -100,6 +153,15 @@ export class TunnelManager {
         if (!isResolved) {
           isResolved = true;
           this.stopTunnel();
+
+          const nextProvider = allowFallback ? this.getNextFallbackProvider(provider) : null;
+          if (nextProvider) {
+            this.spawnTunnelWithProvider(nextProvider, port, timeoutMs, true)
+              .then(resolve)
+              .catch(reject);
+            return;
+          }
+
           reject(new Error(`Timed out waiting for ${provider} tunnel to start after ${timeoutMs}ms.`));
         }
       }, timeoutMs);
@@ -155,8 +217,9 @@ export class TunnelManager {
             this.currentTunnel = null;
             this.activeProcess = null;
 
-            if (allowFallback && provider === 'cloudflare') {
-              this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+            const nextProvider = allowFallback ? this.getNextFallbackProvider(provider) : null;
+            if (nextProvider) {
+              this.spawnTunnelWithProvider(nextProvider, port, timeoutMs, true)
                 .then(resolve)
                 .catch(reject);
               return;
@@ -173,8 +236,9 @@ export class TunnelManager {
             clearTimeout(timeout);
             isResolved = true;
 
-            if (allowFallback && provider === 'cloudflare') {
-              this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+            const nextProvider = allowFallback ? this.getNextFallbackProvider(provider) : null;
+            if (nextProvider) {
+              this.spawnTunnelWithProvider(nextProvider, port, timeoutMs, true)
                 .then(resolve)
                 .catch(reject);
               return;
@@ -189,8 +253,9 @@ export class TunnelManager {
         this.currentTunnel = null;
         this.activeProcess = null;
 
-        if (allowFallback && provider === 'cloudflare') {
-          this.spawnTunnelWithProvider('localtunnel', port, timeoutMs, false)
+        const nextProvider = allowFallback ? this.getNextFallbackProvider(provider) : null;
+        if (nextProvider) {
+          this.spawnTunnelWithProvider(nextProvider, port, timeoutMs, true)
             .then(resolve)
             .catch(reject);
           return;

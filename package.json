@@ -2,7 +2,7 @@
   "name": "launchwizard",
   "displayName": "LaunchWizard",
   "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "pricing": "Free",
   "publisher": "dr-opensource",
   "author": "Dr. Shubham Kashyap",

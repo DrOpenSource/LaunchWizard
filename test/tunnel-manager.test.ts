@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TunnelManager } from '../src/core/TunnelManager.js';
 import { QrGenerator } from '../src/core/QrGenerator.js';
-
 import * as http from 'node:http';
+import { EventEmitter } from 'node:events';
 
 describe('TunnelManager & QrGenerator', () => {
+
   it('extracts Cloudflare Quick Tunnel URLs from stdout stream', () => {
     const output = [
       '2026-10-10T12:00:00Z INF +--------------------------------------------------------------------------------------------+',
@@ -76,27 +77,128 @@ describe('TunnelManager & QrGenerator', () => {
     }
   });
 
-  it('starts and stops a live localtunnel when cloudflared is unavailable', async () => {
-    const server = http.createServer((_req, res) => {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('LaunchWizard OK');
-    });
+  it('manages tunnel lifecycle, URL resolution, and clean shutdown', async () => {
+    const fakeChild = new EventEmitter() as any;
+    fakeChild.stdout = new EventEmitter();
+    fakeChild.stderr = new EventEmitter();
+    fakeChild.pid = 99999;
+    fakeChild.kill = vi.fn();
 
-    await new Promise<void>((resolve) => server.listen(48291, resolve));
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockReturnValue(fakeChild);
 
     try {
-      const tunnel = await TunnelManager.startTunnel({ port: 48291, timeoutMs: 15000 });
+      const tunnelPromise = TunnelManager.startTunnel({ port: 3000, timeoutMs: 5000 });
+
+      // Simulate child process emitting tunnel URL
+      setTimeout(() => {
+        fakeChild.stdout.emit('data', Buffer.from('your url is: https://test-mock-preview.loca.lt\n'));
+      }, 10);
+
+      const tunnel = await tunnelPromise;
       expect(tunnel.status).toBe('active');
-      expect(tunnel.url).toMatch(/^https:\/\//);
-      expect(tunnel.localPort).toBe(48291);
+      expect(tunnel.url).toBe('https://test-mock-preview.loca.lt');
+      expect(tunnel.localPort).toBe(3000);
       expect(tunnel.qrCodeSvg).toContain('<svg');
 
       const stopped = TunnelManager.stopTunnel();
       expect(stopped).toBe(true);
       expect(TunnelManager.getStatus().status).toBe('idle');
     } finally {
+      launchSpy.mockRestore();
       TunnelManager.stopTunnel();
-      server.close();
     }
-  }, 25000);
+  });
+
+  it('checks if ssh binary is available returning boolean', () => {
+    const isSsh = TunnelManager.isSshAvailable();
+    expect(typeof isSsh).toBe('boolean');
+  });
+
+  it('manages zero-interstitial localhost.run tunnel via OpenSSH and generates valid QR code', async () => {
+    const fakeChild = new EventEmitter() as any;
+    fakeChild.stdout = new EventEmitter();
+    fakeChild.stderr = new EventEmitter();
+    fakeChild.pid = 99998;
+    fakeChild.kill = vi.fn();
+
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((provider) => {
+      expect(provider).toBe('localhost.run');
+      return fakeChild;
+    });
+
+    try {
+      const tunnelPromise = TunnelManager.startTunnel({ port: 5173, provider: 'localhost.run', timeoutMs: 5000 });
+
+      // Simulate localhost.run stdout stream
+      setTimeout(() => {
+        fakeChild.stdout.emit('data', Buffer.from('f95a5479518502.lhr.life tunneled with tls termination, https://f95a5479518502.lhr.life\n'));
+      }, 10);
+
+      const tunnel = await tunnelPromise;
+      expect(tunnel.status).toBe('active');
+      expect(tunnel.provider).toBe('localhost.run');
+      expect(tunnel.url).toBe('https://f95a5479518502.lhr.life');
+      expect(tunnel.localPort).toBe(5173);
+      expect(tunnel.qrCodeSvg).toContain('<svg');
+
+      const stopped = TunnelManager.stopTunnel();
+      expect(stopped).toBe(true);
+    } finally {
+      launchSpy.mockRestore();
+      TunnelManager.stopTunnel();
+    }
+  });
+
+  it('cascades fallback to localhost.run when cloudflare process exits prematurely', async () => {
+    const cfChild = new EventEmitter() as any;
+    cfChild.stdout = new EventEmitter();
+    cfChild.stderr = new EventEmitter();
+    cfChild.pid = 99991;
+    cfChild.kill = vi.fn();
+
+    const lhrChild = new EventEmitter() as any;
+    lhrChild.stdout = new EventEmitter();
+    lhrChild.stderr = new EventEmitter();
+    lhrChild.pid = 99992;
+    lhrChild.kill = vi.fn();
+
+    const cfAvailableSpy = vi.spyOn(TunnelManager, 'isCloudflaredAvailable').mockReturnValue(true);
+    let calls = 0;
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((provider) => {
+      calls++;
+      if (provider === 'cloudflare') {
+        return cfChild;
+      }
+      return lhrChild;
+    });
+
+    try {
+      const tunnelPromise = TunnelManager.startTunnel({ port: 3000, provider: 'cloudflare', timeoutMs: 5000 });
+
+      // Trigger exit on first provider (cloudflare)
+      setTimeout(() => {
+        cfChild.emit('exit', 1);
+      }, 10);
+
+      // Second provider (localhost.run) succeeds
+      setTimeout(() => {
+        lhrChild.stdout.emit('data', Buffer.from('Connect via https://dev-fallback.lhr.life\n'));
+      }, 30);
+
+      const tunnel = await tunnelPromise;
+      expect(calls).toBe(2);
+      expect(tunnel.status).toBe('active');
+      expect(tunnel.url).toBe('https://dev-fallback.lhr.life');
+      expect(tunnel.provider).toBe('localhost.run');
+
+      TunnelManager.stopTunnel();
+    } finally {
+      cfAvailableSpy.mockRestore();
+      launchSpy.mockRestore();
+      TunnelManager.stopTunnel();
+    }
+  });
 });
+
+
+
