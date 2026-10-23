@@ -296,13 +296,13 @@
         </div>
 
         <div class="legal-card">
-          <h2>3. Public Preview Tunnels (Cloudflare Quick Tunnels)</h2>
+          <h2>3. Public Preview Links</h2>
           <p>
-            When you explicitly choose to launch an instant shareable link, LaunchWizard spawns a local <code>cloudflared</code> sub-process connecting your designated local dev port to Cloudflare's public Quick Tunnel infrastructure (<code>trycloudflare.com</code>).
+            When you explicitly choose to launch a shareable link, LaunchWizard connects your chosen local port to a temporary public HTTPS URL using the first available provider: <strong>Cloudflare Quick Tunnel</strong> (<code>cloudflared</code>, <code>trycloudflare.com</code>) if installed; otherwise <strong>localhost.run</strong> over SSH (<code>lhr.life</code>); otherwise <strong>localtunnel</strong> (<code>loca.lt</code>), downloaded on demand from the public npm registry.
           </p>
           <ul>
-            <li><strong>Encrypted Transport</strong>: Tunnels are protected with Cloudflare SSL/TLS encryption.</li>
-            <li><strong>Direct Routing</strong>: Network packets flow directly between Cloudflare's edge network and your local machine. LaunchWizard does not operate intermediate logging servers or proxy interception.</li>
+            <li><strong>Encrypted Transport</strong>: Links are served over HTTPS by the provider.</li>
+            <li><strong>Provider Routing</strong>: Visitors' traffic passes through the chosen provider's servers to your machine. LaunchWizard does not operate any server and does not log this traffic. Anyone with the link can open it until you stop it.</li>
             <li><strong>User Control</strong>: Tunnels can be stopped instantly at any time via the 1-click "Stop Tunnel" button in the extension or webview deck.</li>
           </ul>
         </div>
@@ -313,9 +313,19 @@
             If you purchase <strong>LaunchWizard Pro Lifetime ($9.99 One-Time)</strong>, your transaction is processed securely through <strong>Gumroad</strong>. We do not store or process your credit card numbers or financial details.
           </p>
           <ul>
-            <li><strong>Offline Cryptographic Verification</strong>: Pro licenses can be validated completely offline on your computer using cryptographic HMAC signatures without needing an internet connection.</li>
-            <li><strong>Online Gumroad Verification</strong>: If validated online, only your license key string is sent to Gumroad's official API (<code>api.gumroad.com</code>) to verify validity. No device telemetry, workspace metadata, or code statistics are transmitted.</li>
-            <li><strong>Device Activation</strong>: Your license allows activation on up to three (3) personal developer machines.</li>
+            <li><strong>Gumroad Verification</strong>: When you activate Pro, and about once a week afterwards, only your license key string is sent to Gumroad's official API (<code>api.gumroad.com</code>) to check it is valid and not refunded. No device telemetry, workspace metadata, or code statistics are transmitted.</li>
+            <li><strong>Device Activation</strong>: Your license covers up to three (3) personal developer machines. To count them, LaunchWizard stores a one-way hash of VS Code's machine identifier on your machine only; it is never sent anywhere.</li>
+          </ul>
+        </div>
+
+        <div class="legal-card">
+          <h2>4b. Pro Tools That Contact Third Parties (only when you run them)</h2>
+          <ul>
+            <li><strong>Visitor Log</strong>: For Pro links, a small proxy on your machine records each page visit (time, device type, browser, page path and IP address) in memory only. It is shown to you in the editor, never sent anywhere, and is gone when the link stops.</li>
+            <li><strong>Link Check</strong>: Before announcing a Cloudflare link, LaunchWizard asks Cloudflare's public DNS resolver (<code>1.1.1.1</code>) whether the new hostname is live. Only the hostname is sent.</li>
+            <li><strong>BYOK Deploy</strong>: Uploads your project to your own Vercel or Cloudflare Pages account with the token you provide. Tokens stay in VS Code's secure storage on your machine.</li>
+            <li><strong>Custom Subdomains</strong>: Run through a named Cloudflare Tunnel in your own Cloudflare account.</li>
+            <li><strong>Dependency Health</strong>: Runs <code>npm audit</code> / <code>npm outdated</code>, which send your dependency list to the public npm registry, exactly as when you run them yourself.</li>
           </ul>
         </div>
 
@@ -326,7 +336,9 @@
           </p>
           <ul>
             <li><strong>Gumroad</strong>: Payment processing and license key issuance. (<a href="https://gumroad.com/privacy" target="_blank" rel="noopener">Gumroad Privacy Policy</a>)</li>
-            <li><strong>Cloudflare</strong>: Edge tunnel infrastructure and documentation hosting. (<a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a>)</li>
+            <li><strong>localhost.run</strong> and <strong>localtunnel</strong>: Fallback preview-link providers, used only when Cloudflare's <code>cloudflared</code> app is not installed.</li>
+            <li><strong>Vercel</strong>: Deploy target for Pro BYOK deploys, using your own account. (<a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel Privacy Policy</a>)</li>
+            <li><strong>Cloudflare</strong>: Preview-link infrastructure, public DNS check, Pages deploys (your own account) and website hosting. (<a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a>)</li>
             <li><strong>VS Code / Cursor / Open VSX Marketplace</strong>: Extension distribution platforms.</li>
           </ul>
         </div>

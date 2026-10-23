@@ -48,33 +48,52 @@ Welcome, Agent. You are developing **LaunchWizard**, an intent-based "Get It Liv
 LaunchWizard/
 ├── docs/
 │   ├── PRD.md                 # Product Requirements Document & User Personas
-│   └── ROADMAP.md             # Phase-wise sprint checklist & tracker
+│   ├── ROADMAP.md             # Phase-wise sprint checklist & tracker
+│   ├── SUPPORT.md             # Maintainer runbook (seat resets, refunds)
+│   └── memory/                # Context, ADRs, versioning, known issues
 ├── src/
 │   ├── core/                  # Platform-agnostic engine (Zero IDE dependencies)
-│   │   ├── PreFlightEngine.ts # Framework detector, typecheck, & build dry-run
+│   │   ├── PreFlightEngine.ts # Framework detection, project tsc, env audit, file scan
+│   │   ├── FileHealScanner.ts # 'use client', import case, .env '#' traps
+│   │   ├── AutoHealer.ts      # Patch generator, safety classes, rollback planning
+│   │   ├── Diff.ts            # Unified diffs + minimal editor replacements
+│   │   ├── BuildRunner.ts     # Full production build check + output parsing
 │   │   ├── ErrorTranslator.ts # Compiler-to-Plain-English translation map
-│   │   ├── AutoHealer.ts      # Deterministic AST & regex patch generator
-│   │   ├── TunnelManager.ts   # Cloudflare Quick Tunnel runner & lifecycle
-│   │   ├── QrGenerator.ts     # In-IDE ASCII & SVG QR code generator
-│   │   └── LicenseManager.ts  # $9.99 Gumroad cryptographic key verification
+│   │   ├── EnvRules.ts        # Secret-looking variable names
+│   │   ├── ProcessRunner.ts   # Spawn with timeout/cancel, tree kill
+│   │   ├── TunnelManager.ts   # Tunnel sessions, provider fallback, DNS wait
+│   │   ├── LinkGuardProxy.ts  # Pro: passcode proxy + visitor log
+│   │   ├── NamedTunnelSetup.ts # Pro: custom subdomains (named Cloudflare Tunnel)
+│   │   ├── QrGenerator.ts     # SVG + PNG QR codes
+│   │   ├── LicenseManager.ts  # Gumroad-only licensing (ADR-005)
+│   │   ├── SecretScanner.ts   # Pro: Secret Leak Guard
+│   │   ├── PrePushHook.ts     # Pro: Pre-Push Gate git hook
+│   │   ├── DependencyHealth.ts # Pro: npm/pnpm audit + outdated
+│   │   ├── BundleAnalyzer.ts  # Pro: bundle size budget
+│   │   ├── DeployManager.ts   # Pro: BYOK deploy (Vercel / Cloudflare Pages)
+│   │   ├── ShareCards.ts      # Pro: team cards + report export
+│   │   └── GitInfo.ts         # Read-only git helpers
+│   ├── cli/preflight.ts       # Stand-alone checker for the git hook (→ dist/cli.js)
 │   ├── extension/             # VS Code / Cursor / Antigravity integration
-│   │   ├── extension.ts       # Extension entry point & lifecycle hooks
-│   │   ├── StatusBar.ts       # Live pre-flight radar & quick share button
-│   │   ├── PreFlightDeckView.ts # Activity Bar webview dashboard
-│   │   └── CodeActions.ts     # Inline lightbulb auto-healers
+│   │   ├── extension.ts       # Entry point: wires services and commands
+│   │   ├── LicenseService.ts  # SecretStorage, weekly re-check, requirePro gate
+│   │   ├── HealService.ts     # Preview, editor edits, undo, auto-fix on save
+│   │   ├── ShareService.ts    # Links, private links, domains, team cards
+│   │   ├── ToolsService.ts    # Build check + Ship Safe tools
+│   │   ├── DeployService.ts   # BYOK deploy flow with confirmations
+│   │   ├── AppState.ts / Settings.ts / Log.ts
+│   │   ├── StatusBar.ts       # Live pre-flight radar & quick menu
+│   │   ├── PreFlightDeckView.ts # Activity Bar webview (CSP + escaped rendering)
+│   │   └── CodeActions.ts     # Framework-aware lightbulb fixes
 │   └── shared/                # Shared types, constants, and translations
 │       ├── types.ts           # Pre-flight, tunnel, and diagnostics contracts
 │       └── glossary.ts        # Technical-to-Plain-English translation dictionary
-├── test/
-│   ├── preflight-engine.test.ts # Framework build & typecheck detection tests
-│   ├── error-translator.test.ts # Diagnostic translation tests
-│   ├── auto-healer.test.ts     # AST patch application tests
-│   └── tunnel-manager.test.ts  # Tunnel lifecycle & output parser tests
+├── test/                      # Vitest: core + extension layer (mocks/vscode.ts stands in for the VS Code API)
 ├── AGENTS.md                  # This agent protocol file
 ├── index.html                 # Ecosystem portfolio & showcase landing page
 ├── package.json               # Extension manifest and build scripts
 ├── tsconfig.json              # Strict TypeScript compiler options
-└── vitest.config.ts           # Vitest unit test runner config
+└── vitest.config.ts           # Vitest config (aliases `vscode` to the test stand-in)
 ```
 
 ---

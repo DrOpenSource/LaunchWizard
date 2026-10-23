@@ -17,6 +17,7 @@ This document tracks all implementation phases, verification milestones, and ong
 | **Phase 7: Landing Page & Portfolio** | Modern marketing page (`index.html`) on Cloudflare Pages, Gumroad embed, Calm Suite links. | ✅ Complete | Live on `https://launchwizard.taqnik.in`. |
 | **Phase 8: Packaging & Verification** | Strict compile check, Vitest 41/41 test pass, VSIX package generation (`launchwizard-0.2.1.vsix`). | ✅ Complete | Production extension bundled and packaged. |
 | **Phase 9: Tunnel Resilience & Memory Architecture** | Fix Localtunnel timeouts & Bad Gateway, add OpenSSH fallback, create Project Memory Architecture (ADRs, context, versioning), release v0.2.2. | ✅ Complete | 44/44 Vitest tests passing, `launchwizard-0.2.2.vsix` packaged. |
+| **Phases 10–18: Audit Remediation & Pro Build-out** | Honest copy, all 13 audit bugs fixed, zero-cost Gumroad licensing, auto-fix on save, Secret Leak Guard, Pre-Push Gate, private links, team cards, multi-port, Dependency Health, Bundle Budget, BYOK deploy (beta), custom subdomains (beta). Details: [`docs/ROADMAP.md`](../ROADMAP.md). | ✅ Built (v0.5.0) | 132/132 Vitest tests; headless run in VS Code 1.90.0; live Windows smoke tests. Publishing and some hand tests are still with the maintainer. |
 
 ---
 
@@ -32,6 +33,15 @@ This document tracks all implementation phases, verification milestones, and ong
 - [x] Add multi-provider automatic cascading (`Cloudflare` -> `localhost.run` -> `Localtunnel`).
 - [x] Achieve 100% test pass (44/44 Vitest unit tests passing cleanly).
 - [x] Tag and bundle `v0.2.2` (`launchwizard-0.2.2.vsix`).
+
+## ⏭️ Next: Release v0.5.0 (maintainer actions)
+
+All code for Phases 10–18 is built and tested (see [`docs/ROADMAP.md`](../ROADMAP.md)). Rule: everything runs at $0 for the maintainer (no paid servers; licensing is Gumroad-only, ADR-005). Remaining, all outward-facing or needing real accounts:
+
+- [ ] Commit and tag `v0.5.0`.
+- [ ] Publish `launchwizard-0.5.0.vsix` (Marketplace: publisher page ⋮ → Update; Open VSX).
+- [ ] `npm run deploy:site`; paste the Gumroad copy from `docs/GUMROAD_LISTING.md`; enable "unique license key per sale".
+- [ ] Hand tests: real Gumroad key activation, live Vercel / Cloudflare Pages deploy, live custom domain, macOS and Linux.
 
 ---
 
