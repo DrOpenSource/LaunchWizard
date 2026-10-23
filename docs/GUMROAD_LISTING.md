@@ -7,8 +7,7 @@
 ## ✅ Setup checklist
 
 - [ ] **Product tab**: name, URL, description, cover, thumbnail, call to action, summary, additional details, price, settings, refund policy ([§1](#1-product-tab))
-- [ ] **Content tab**: activation page with the **License key** block inserted ([§3](#3-content-tab-what-buyers-see-after-purchase)). Without that block, Gumroad generates no keys and activation fails.
-- [ ] **Receipt tab**: button text and custom message ([§4](#4-receipt-tab-the-purchase-email))
+- [ ] **Receipt tab**: welcome + activation message ([§3](#3-welcome-message-receipt-tab--custom-message))
 - [ ] **Share tab**: category and tags ([§5](#5-share-tab-discover))
 - [ ] Buy a test copy with a 100% discount code and activate it in VS Code ([§6](#6-test-purchase-before-announcing))
 
@@ -129,78 +128,20 @@ Pay once. Own it forever. Zero monthly fees.
 
 ---
 
-## 3. Content tab (what buyers see after purchase)
+## 3. Welcome message (Receipt tab → Custom message)
 
-This page opens from the **"Get your license key"** button in the receipt email, and it stays in the buyer's Gumroad Library forever. Type it into the Content editor as rich text, then:
-
-1. **Insert the License key block** where the placeholder below says. Use the editor's insert menu → **License key**. This is what makes Gumroad generate a unique key per sale. Only one license key block is allowed per version.
-2. Leave **multi-seat licensing off**. LaunchWizard enforces its own 3-machine limit, and multi-seat changes how Gumroad counts uses.
-3. No file upload is needed: the extension installs from the Marketplace. The `.vsix` link below is for editors without Marketplace access.
-
-```markdown
-# 🎉 Welcome to LaunchWizard Pro!
-
-Thank you for supporting an indie tool. Your lifetime license is below.
-
-## 🔑 Your license key
-
-[ INSERT → LICENSE KEY BLOCK HERE ]
-
-Keep this key private. It works on up to 3 of your personal machines.
-
-## 1. Install the free extension (skip if you already have it)
-
-- **VS Code:** open Extensions (Ctrl+Shift+X / Cmd+Shift+X), search **LaunchWizard**, click Install.
-  Direct link: https://marketplace.visualstudio.com/items?itemName=dr-opensource.launchwizard
-- **Cursor / Antigravity / other editors:** download the latest `.vsix` from https://github.com/DrOpenSource/LaunchWizard/releases/latest, then open the Command Palette and run **Extensions: Install from VSIX…**
-
-## 2. Activate Pro (takes 10 seconds)
-
-1. Copy your license key above.
-2. Open the Command Palette: **Ctrl+Shift+P** (Windows/Linux) or **Cmd+Shift+P** (macOS).
-3. Run **LaunchWizard: Activate Pro License**.
-4. Paste the key and press Enter. You'll see "LaunchWizard Pro activated!".
-
-Prefer clicking? Open the 🚀 LaunchWizard icon in the sidebar and choose **Enter key** in the Pro card.
-
-Activation needs an internet connection once. After that, Pro keeps working offline for 30 days between automatic checks.
-
-## 3. Try your Pro features
-
-- 🪄 **Auto-fix on save**: save a file; safe build traps are fixed for you (with Undo).
-- 🔒 **Private link**: Command Palette → **LaunchWizard: Get Private Link with Passcode**.
-- 🗂️ **Team card**: with a link running, **LaunchWizard: Copy Team Preview Card**.
-- 🔐 **Secret Leak Guard**: **LaunchWizard: Scan for Leaked Secrets**.
-- 🚧 **Pre-Push Gate**: **LaunchWizard: Turn Pre-Push Gate On/Off**.
-- 🚀 **Deploy (beta)**: **LaunchWizard: Deploy to Vercel or Cloudflare Pages**.
-
-Everything is also in the sidebar and in the status-bar menu (click **Launch** at the bottom right).
-
-## Need help?
-
-- **New computer, or "already active on 3 machines"?** Run **LaunchWizard: Show License Status → Request a Seat Reset**, or email taqnikin@gmail.com with your order email. Please don't post your key publicly.
-- **Check your license:** **LaunchWizard: Show License Status**.
-- **Docs and limitations:** https://launchwizard.taqnik.in
-- **Refunds:** full refund within 30 days. Just email us.
-
-Happy shipping! 🚀
-```
-
----
-
-## 4. Receipt tab (the purchase email)
-
-| Gumroad field | What to enter | Limit |
-| :--- | :--- | :--- |
-| **Button text** | `Get your license key` | 26 characters (this is 20). Replaces the default "View content" button in the receipt email and on the product page. |
-| **Custom message** | Text below | 500 characters (see the count below). |
+Gumroad generates each buyer's license key and sends it in the receipt on its own. This message only welcomes them and explains activation. It contains no key.
 
 ```text
-Thanks for getting LaunchWizard Pro! 🚀
-To activate: click "Get your license key" above and copy your key. Then in VS Code, Cursor or Antigravity press Ctrl+Shift+P (Cmd+Shift+P on Mac), run "LaunchWizard: Activate Pro License" and paste it.
-No extension yet? Search "LaunchWizard" in the Extensions view.
-Lifetime license, up to 3 personal machines. Questions or refunds: taqnikin@gmail.com
+Welcome to LaunchWizard Pro! 🚀 Thanks for your purchase.
+
+To activate:
+1. Install LaunchWizard from the Extensions view in VS Code, Cursor or Antigravity (search "LaunchWizard").
+2. Press Ctrl+Shift+P (Cmd+Shift+P on Mac) and run "LaunchWizard: Activate Pro License".
+3. Paste the license key from your Gumroad receipt and press Enter.
 ```
+
+The Content tab can stay empty, or hold the same text if you want it on the buyer's Library page too.
 
 ---
 
@@ -213,14 +154,14 @@ Lifetime license, up to 3 personal machines. Questions or refunds: taqnikin@gmai
 | **Display your product's 1–5 star rating** | On once there are reviews |
 | **Discover fee** | Leave at the default |
 
-Checkout **custom fields**: none. The license key needs nothing extra from the buyer, and fewer fields means fewer abandoned checkouts.
+Checkout **custom fields**: none. Activation needs nothing extra from the buyer, and fewer fields means fewer abandoned checkouts.
 
 ---
 
 ## 6. Test purchase before announcing
 
 1. Create a 100% discount code, buy the product yourself, and open the receipt email.
-2. Check the button says **Get your license key** and the page shows a real key in the License key block.
+2. Check the receipt shows the license key and the welcome message.
 3. Activate it in VS Code. **LaunchWizard: Show License Status** should show "Machines: 1 of 3".
 4. Free the test seat (see [`docs/SUPPORT.md`](SUPPORT.md)) and delete the discount code.
 
@@ -229,7 +170,7 @@ Checkout **custom fields**: none. The license key needs nothing extra from the b
 ## 7. License key technical notes
 
 * **Format**: Gumroad standard license key. The legacy `SHIP-PRO-XXXX-XXXX` format is retired (none were ever issued).
-* **Gumroad settings**: keys exist only when the **License key** block is in the Content tab ([§3](#3-content-tab-what-buyers-see-after-purchase)).
+* **Gumroad settings**: license keys are generated and emailed by Gumroad for every sale; keep license keys enabled on the product.
 * **How the extension checks keys** (Gumroad's free license API, no server):
   1. **Activation**: `POST https://api.gumroad.com/v2/licenses/verify` — first read-only (`increment_uses_count=false`) to check seats, then once with `increment_uses_count=true` on a new machine. A 4th machine is refused.
   2. **Weekly re-check**: read-only verify; refunded or charged-back purchases drop to Free.
