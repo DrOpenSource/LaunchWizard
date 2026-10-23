@@ -17,7 +17,9 @@ describe('ErrorTranslator', () => {
     expect(card.badge).toBe('📦 Missing Module');
     expect(card.friendlyTitle).toBe('Cannot Find Module or File');
     expect(card.whyItBreaks).toContain('Vercel and Cloudflare production bundlers');
-    expect(card.autoFixAvailable).toBe(true);
+    // No healer is attached to a plain TS2307, so the card must not promise a fix.
+    expect(card.autoFixAvailable).toBe(false);
+    expect(ErrorTranslator.translate({ ...error, healerId: 'fix-import-case' }).autoFixAvailable).toBe(true);
   });
 
   it('translates TS2322 (type mismatch)', () => {

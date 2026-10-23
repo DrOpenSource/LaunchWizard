@@ -20,3 +20,9 @@ assets/gumroad*
 assets/*.svg
 extension/**
 assets/gumroad-src/**
+MEMORY.md
+**/*.map
+assets/icon.png
+.wrangler/**
+.claude/**
+.github/**

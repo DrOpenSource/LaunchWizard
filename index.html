@@ -19,7 +19,7 @@
     />
     <meta
       property="og:description"
-      content="1-click secure Cloudflare tunnel + auto-healing production TypeScript and bundler errors for vibe coders. Zero subscriptions."
+      content="Catch TypeScript and env-variable build blockers before you deploy, read them in plain English, and share a free HTTPS preview link with a phone QR code. Pay once, no subscriptions."
     />
     <link rel="canonical" href="https://launchwizard.taqnik.in" />
     <script src="https://gumroad.com/js/gumroad.js"></script>
@@ -466,6 +466,7 @@
         gap: 10px;
       }
       .p-check { color: var(--green); font-weight: 700; }
+      .p-soon { color: var(--ink-2); font-weight: 700; }
 
       /* Suite Synergy Banner */
       .suite-banner {
@@ -595,9 +596,9 @@
           >⚡ Install from VS Code Marketplace</a>
           <a
             class="btn btn-ghost"
-            href="/launchwizard-0.2.1.vsix"
+            href="/launchwizard-0.5.0.vsix"
             download
-          >📦 .vsix for Cursor / Antigravity (v0.2.1)</a>
+          >📦 .vsix for Cursor / Antigravity (v0.5.0)</a>
           <a
             class="btn btn-ghost gumroad-button"
             href="https://kashyapster867.gumroad.com/l/launchwizard"
@@ -608,7 +609,7 @@
           💡 <strong>Cursor &amp; Antigravity (no Marketplace access):</strong> download the .vsix → Press <kbd style="background:var(--surface-2);padding:2px 6px;border-radius:4px;border:1px solid var(--hairline);font-size:0.75rem;">Ctrl+Shift+P</kbd> → select <em>"Extensions: Install from VSIX..."</em>
         </p>
         <p class="hero-meta">
-          Zero Subscriptions · 1-Time Purchase · 100% Free Cloudflare Quick Tunnels Included
+          Zero Subscriptions · 1-Time Purchase · Free Preview Links Included · <a href="#limitations">Current limitations</a>
         </p>
 
         <!-- Interactive Simulator (macOS Style) -->
@@ -683,12 +684,12 @@
           <div class="feature-card">
             <div class="feat-icon">⚡</div>
             <h3>Pre-Flight Dry Run</h3>
-            <p>Runs non-destructive dry checks (`tsc --noEmit`, Next.js route checks, missing env references) in under 2 seconds before you push.</p>
+            <p>Runs non-destructive checks (`tsc --noEmit` plus a client env-variable audit) before you push, using your project's own TypeScript, plus traps the compiler misses. A one-click full production build check runs your real build too.</p>
           </div>
           <div class="feature-card">
             <div class="feat-icon">🌐</div>
-            <h3>1-Click Free Cloudflare Tunnel</h3>
-            <p>Generates an instant public HTTPS test link (`trycloudflare.com`) without creating accounts, entering credit cards, or installing ngrok tokens.</p>
+            <h3>1-Click Free Preview Link</h3>
+            <p>Creates a public HTTPS test link (`trycloudflare.com`) with no account or credit card. Install the free `cloudflared` app for best results; otherwise LaunchWizard falls back to localhost.run or localtunnel.</p>
           </div>
           <div class="feature-card">
             <div class="feat-icon">📱</div>
@@ -702,13 +703,13 @@
           </div>
           <div class="feature-card">
             <div class="feat-icon">🪄</div>
-            <h3>Safe Deterministic Auto-Healing</h3>
-            <p>1-Click automated fixes for missing client directives, environment variable leaks (`NEXT_PUBLIC_`), and import paths with full rollback safety.</p>
+            <h3>1-Click Fixes, Preview First</h3>
+            <p>Fixes a missing 'use client', imports whose letter case breaks Linux builds, and .env values cut off at '#'. You see the diff first, and LaunchWizard never offers to make a secret public.</p>
           </div>
           <div class="feature-card">
             <div class="feat-icon">🛡️</div>
-            <h3>Zero Data Loss Shield</h3>
-            <p>LaunchWizard never mutates code destructively. Every patch records an in-memory rollback backup so you can undo in 100ms.</p>
+            <h3>Undo Anything</h3>
+            <p>Every fix goes through your editor, so Ctrl+Z works, and "Undo Last Fix" restores the files, unless you edited them again since.</p>
           </div>
         </div>
       </div>
@@ -742,9 +743,9 @@
               <td><strong>Prepend 'use client'</strong></td>
             </tr>
             <tr>
-              <td><span class="code-pill">Client access to process.env.API_KEY</span></td>
-              <td>Secret is missing `NEXT_PUBLIC_` prefix and will be undefined in production.</td>
-              <td><strong>Prefix with NEXT_PUBLIC_</strong></td>
+              <td><span class="code-pill">Client access to process.env.SITE_URL</span></td>
+              <td>Variable lacks the `NEXT_PUBLIC_` prefix, so it is undefined in the browser.</td>
+              <td><strong>Prefix with NEXT_PUBLIC_ (only if it is not a secret)</strong></td>
             </tr>
             <tr>
               <td><span class="code-pill">TS2339: Property 'avatar' does not exist</span></td>
@@ -771,11 +772,11 @@
             <div class="p-price">$0</div>
             <div class="p-desc">Essential pre-flight checks and manual tunnels for every developer.</div>
             <ul class="p-features">
-              <li><span class="p-check">✓</span> <strong>Local pre-flight dry runs (tsc &amp; bundlers)</strong></li>
-              <li><span class="p-check">✓</span> <strong>1-Click Cloudflare Quick Tunnels (trycloudflare.com)</strong></li>
+              <li><span class="p-check">✓</span> <strong>Pre-flight check + full production build check</strong></li>
+              <li><span class="p-check">✓</span> <strong>Free shareable HTTPS preview links</strong></li>
               <li><span class="p-check">✓</span> <strong>In-IDE Mobile QR Code generator</strong></li>
               <li><span class="p-check">✓</span> <strong>Plain-English Error Translator</strong></li>
-              <li><span class="p-check">✓</span> <strong>Manual 1-click auto-healers</strong></li>
+              <li><span class="p-check">✓</span> <strong>1-click fixes with preview and undo</strong></li>
             </ul>
             <a
               class="btn btn-primary"
@@ -786,10 +787,10 @@
             >⚡ Install Free from VS Code Marketplace</a>
             <a
               class="btn btn-ghost"
-              href="/launchwizard-0.2.1.vsix"
+              href="/launchwizard-0.5.0.vsix"
               download
               style="width: 100%; text-align: center; font-size: 0.85rem;"
-            >📦 .vsix for Cursor / Antigravity (v0.2.1)</a>
+            >📦 .vsix for Cursor / Antigravity (v0.5.0)</a>
           </div>
 
           <!-- Pro Lifetime -->
@@ -797,14 +798,18 @@
             <div class="p-badge">Lifetime Access</div>
             <div class="p-plan">Pro Lifetime</div>
             <div class="p-price">$9.99 <span>/ one-time</span></div>
-            <div class="p-desc">Autonomous protection and zero-friction deploy pipelines for heavy vibe coders.</div>
+            <div class="p-desc">Automatic protection, private sharing and 1-click deploys. Pay once, no subscription.</div>
             <ul class="p-features">
               <li><span class="p-check">✓</span> <strong>Everything in Free</strong></li>
-              <li><span class="p-check">✓</span> <strong>Automated AST auto-healing on save</strong></li>
-              <li><span class="p-check">✓</span> <strong>BYOK 1-Click Cloud Deploy (Vercel &amp; Cloudflare)</strong></li>
-              <li><span class="p-check">✓</span> <strong>Password-protected tunnels &amp; custom subdomains</strong></li>
-              <li><span class="p-check">✓</span> <strong>Use on up to 3 personal machines</strong></li>
-              <li><span class="p-check">✓</span> <strong>Lifetime updates included</strong></li>
+              <li><span class="p-check">✓</span> <strong>Auto-fix on save</strong> + background checks</li>
+              <li><span class="p-check">✓</span> <strong>Secret Leak Guard</strong> before you share or deploy</li>
+              <li><span class="p-check">✓</span> <strong>Pre-Push Gate</strong> git hook</li>
+              <li><span class="p-check">✓</span> <strong>Private links</strong> with passcode, auto-expiry &amp; visitor log</li>
+              <li><span class="p-check">✓</span> <strong>Team preview cards</strong> &amp; multi-port sharing</li>
+              <li><span class="p-check">✓</span> <strong>Dependency Health</strong> &amp; bundle size budget</li>
+              <li><span class="p-check">✓</span> <strong>BYOK deploy</strong> to Vercel / Cloudflare Pages <span class="p-soon">(beta)</span></li>
+              <li><span class="p-check">✓</span> <strong>Custom subdomains</strong> on your own domain <span class="p-soon">(beta)</span></li>
+              <li><span class="p-check">✓</span> <strong>Lifetime updates</strong> · up to 3 personal machines</li>
             </ul>
             <a
               class="btn btn-primary gumroad-button"
@@ -812,6 +817,22 @@
               target="_blank"
             >🚀 Buy Pro — $9.99</a>
           </div>
+        </div>
+
+
+        <!-- Current limitations (kept in sync with README "Current Limitations") -->
+        <div class="pricing-card" id="limitations" style="margin-top: 24px; text-align: left;">
+          <div class="p-plan">Current limitations (v0.5.0)</div>
+          <ul class="p-features" style="margin-top: 12px;">
+            <li><strong>Beta:</strong> BYOK deploy and custom subdomains are tested against simulated Vercel/Cloudflare tools, not yet live accounts.</li>
+            <li>Fixes cover common traps only; other errors get a plain-English explanation instead of an automatic fix.</li>
+            <li>The full build check runs your real build: it writes the usual output folders (never your source) and can take a few minutes.</li>
+            <li>Install the free <code>cloudflared</code> app for the best links. Without it, localtunnel shows visitors an IP check page. New links take about 10–30 seconds to work worldwide, and free links are public to anyone with the URL.</li>
+            <li>Secret Leak Guard recognises well-known key formats; it can't promise to find every secret.</li>
+            <li>Dependency Health supports npm and pnpm. The Pre-Push Gate needs Node.js on your PATH.</li>
+            <li>Pro activation needs the internet once, then works offline for 30 days between checks.</li>
+            <li>Verified by hand on Windows; macOS and Linux are covered by automated tests only so far.</li>
+          </ul>
         </div>
 
         <!-- The Calm Dev Suite Triad -->
@@ -935,7 +956,7 @@
             <div style="text-align: center; max-width: 480px; margin: 20px auto;">
               <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">🌐 Live Shareable Cloudflare Tunnel</div>
               <p style="color: var(--ink-2); font-size: 0.9rem; margin-bottom: 16px;">
-                Secure HTTPS tunnel connected to your local port 3000. No accounts, zero configuration.
+                Secure HTTPS link to your local port 3000. No account needed.
               </p>
               <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; color: var(--accent); margin-bottom: 16px;">
                 https://calm-vibe-preview-88.trycloudflare.com
@@ -954,7 +975,7 @@
               <div style="background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 14px;">
                 <span class="code-pill">ENV_LEAK</span>
                 <span style="font-weight: 700; margin-left: 8px;">Missing NEXT_PUBLIC_ Prefix</span>
-                <p style="font-size: 0.85rem; color: var(--ink-2); margin-top: 4px;">Client component reads process.env.API_SECRET. In production Next.js bundles, this will be silently undefined for security.</p>
+                <p style="font-size: 0.85rem; color: var(--ink-2); margin-top: 4px;">Client component reads process.env.SITE_URL. Without the NEXT_PUBLIC_ prefix it is undefined in the browser. If the value is a secret, move the read to server code instead.</p>
               </div>
             </div>`;
         }

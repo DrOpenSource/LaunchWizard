@@ -1,0 +1,45 @@
+name: Release
+
+# Pushing a tag like v0.5.0 runs the full gate, packages the .vsix, and publishes a GitHub release with it attached.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Tag must match package.json version
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $VERSION"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: npm run build
+      - run: npm run package
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="docs/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$NOTES" ]; then
+            gh release create "$GITHUB_REF_NAME" launchwizard-*.vsix --title "LaunchWizard $GITHUB_REF_NAME" --notes-file "$NOTES"
+          else
+            gh release create "$GITHUB_REF_NAME" launchwizard-*.vsix --title "LaunchWizard $GITHUB_REF_NAME" --generate-notes
+          fi

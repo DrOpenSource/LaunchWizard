@@ -1,284 +1,266 @@
 import * as vscode from 'vscode';
-import { FrameworkDetector } from '../core/FrameworkDetector.js';
+import * as path from 'node:path';
 import { PreFlightEngine } from '../core/PreFlightEngine.js';
+import { ErrorTranslator } from '../core/ErrorTranslator.js';
 import { AutoHealer } from '../core/AutoHealer.js';
 import { TunnelManager } from '../core/TunnelManager.js';
-import { LicenseManager } from '../core/LicenseManager.js';
-import { StatusBarController } from './StatusBar.js';
-import { PreFlightDeckViewProvider } from './PreFlightDeckView.js';
+import type { PreFlightReport } from '../shared/types.js';
+import { AppState } from './AppState.js';
 import { LaunchWizardCodeActionProvider } from './CodeActions.js';
+import { DeployService } from './DeployService.js';
+import { HealService } from './HealService.js';
+import { LicenseService, PRICING_URL, SUPPORT_URL } from './LicenseService.js';
+import { Log } from './Log.js';
+import { PreFlightDeckViewProvider } from './PreFlightDeckView.js';
+import { Settings } from './Settings.js';
+import { ShareService, projectRoot } from './ShareService.js';
+import { StatusBarController } from './StatusBar.js';
+import { ToolsService } from './ToolsService.js';
 
-let statusBar: StatusBarController | null = null;
-let deckProvider: PreFlightDeckViewProvider | null = null;
-let licenseManager: LicenseManager | null = null;
+const WEBSITE_URL = 'https://launchwizard.taqnik.in';
+const SAVE_CHECK_DEBOUNCE_MS = 1500;
 
-export function activate(context: vscode.ExtensionContext): void {
-  // 1. Initialize core services
-  // Fall back to the pre-rename key so licenses activated before the rebrand stay valid.
-  const storedLicense =
-    context.globalState.get<string>('launchwizard.licenseKey') ??
-    context.globalState.get<string>('shipwizard.licenseKey');
-  licenseManager = new LicenseManager(storedLicense);
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  const state = new AppState();
+  const license = await LicenseService.create(context);
+  const heal = new HealService(context, license);
+  const share = new ShareService(license, () => state.report);
+  const tools = new ToolsService(context, license, state);
+  const deploys = new DeployService(context, license, state, share, tools);
+  const statusBar = new StatusBarController(state);
+  const deck = new PreFlightDeckViewProvider(state, license, heal, tools, deploys);
+  const codeActions = new LaunchWizardCodeActionProvider();
 
-  statusBar = new StatusBarController();
-  deckProvider = new PreFlightDeckViewProvider(context.extensionUri, licenseManager);
-
-  // 2. Register Webview View
+  context.subscriptions.push(state, license, heal, share, deploys, statusBar, deck, { dispose: () => Log.dispose() });
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      PreFlightDeckViewProvider.viewType,
-      deckProvider
-    )
-  );
-
-  // 3. Register Code Action Provider for Quick-Fix lightbulbs
-  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(PreFlightDeckViewProvider.viewType, deck),
     vscode.languages.registerCodeActionsProvider(
       [
         { scheme: 'file', language: 'typescript' },
         { scheme: 'file', language: 'typescriptreact' },
         { scheme: 'file', language: 'javascript' },
         { scheme: 'file', language: 'javascriptreact' },
+        { scheme: 'file', pattern: '**/.env*' },
       ],
-      new LaunchWizardCodeActionProvider(),
-      {
-        providedCodeActionKinds: LaunchWizardCodeActionProvider.providedCodeActionKinds,
-      }
+      codeActions,
+      { providedCodeActionKinds: LaunchWizardCodeActionProvider.providedCodeActionKinds }
     )
   );
 
-  // 4. Command: Open Menu
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.openMenu', async () => {
-      await statusBar?.showQuickMenu();
-    })
-  );
+  // --- Pre-flight (single-flight: a second request joins the running check) ------------
 
-  // 5. Command: Run Pre-Flight
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.runPreFlight', async () => {
-      statusBar?.setCheckingState();
-      const report = await deckProvider?.runPreFlightCheck();
-      if (report) {
-        statusBar?.updateReport(report);
-        if (report.passed) {
-          vscode.window.showInformationMessage(
-            `🚀 LaunchWizard: All pre-flight checks passed! Your ${report.frameworkName} project is ready to ship.`
-          );
-        } else {
-          const action = await vscode.window.showWarningMessage(
-            `🚨 LaunchWizard: Found ${report.errors.length} build blocker(s).`,
-            '1-Click Auto-Heal',
-            'View Deck'
-          );
-          if (action === '1-Click Auto-Heal') {
-            await vscode.commands.executeCommand('launchwizard.autoHealAll');
-          } else if (action === 'View Deck') {
-            await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
-          }
-        }
-      } else {
-        statusBar?.setReadyState();
-        vscode.window.showInformationMessage('LaunchWizard: Please open a project folder to run pre-flight checks.');
-      }
-    })
-  );
+  let running: Promise<PreFlightReport | null> | null = null;
+  const runCheck = (): Promise<PreFlightReport | null> => {
+    if (running) return running;
+    const root = projectRoot();
+    if (!root) return Promise.resolve(null);
+    state.setChecking(true);
+    running = PreFlightEngine.run({ projectRoot: root, timeoutMs: Settings.preflightTimeoutMs })
+      .then((report) => {
+        state.setReport(report, ErrorTranslator.translateBatch(report.errors), ErrorTranslator.translateBatch(report.warnings));
+        return report;
+      })
+      .finally(() => {
+        running = null;
+        state.setChecking(false);
+      });
+    return running;
+  };
 
-  // 6. Command: Start Preview / Tunnel
-  const handleStartPreview = async () => {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    const projectRoot = workspaceFolders?.[0]?.uri.fsPath;
-    const frameworkInfo = projectRoot ? FrameworkDetector.detect(projectRoot) : null;
-    const defaultPort = frameworkInfo?.defaultPort ?? 3000;
+  const register = (command: string, handler: (...args: never[]) => unknown) =>
+    context.subscriptions.push(vscode.commands.registerCommand(command, handler));
 
-    const inputPort = await vscode.window.showInputBox({
-      title: 'LaunchWizard: Launch Instant Shareable Link',
-      prompt: `Enter local dev server port (detected ${frameworkInfo?.displayName ?? 'default'}: ${defaultPort})`,
-      value: String(defaultPort),
-    });
+  register('launchwizard.openMenu', () => statusBar.showQuickMenu(license.isPro()));
 
-    if (!inputPort) return;
-    const port = Number.parseInt(inputPort, 10);
-    if (Number.isNaN(port) || port <= 0 || port > 65535) {
-      vscode.window.showErrorMessage(`LaunchWizard: Invalid port number "${inputPort}".`);
+  register('launchwizard.runPreFlight', async () => {
+    const report = await runCheck();
+    if (!report) {
+      void vscode.window.showInformationMessage('LaunchWizard: open a project folder to run the pre-flight check.');
       return;
     }
-
-    // In-flight health ping: verify local dev server is responding before launching tunnel
-    const isReachable = await TunnelManager.checkLocalPortReachable(port);
-    if (!isReachable) {
-      const choice = await vscode.window.showWarningMessage(
-        `LaunchWizard: No active dev server was detected on port ${port}. Please make sure your dev server (e.g. npm run dev) is running.`,
-        'Launch Anyway',
-        'Cancel'
-      );
-      if (choice !== 'Launch Anyway') {
-        return;
-      }
+    if (report.passed) {
+      void vscode.window.showInformationMessage(`🚀 LaunchWizard: ${report.summaryText}`);
+      return;
     }
-
-    vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: `LaunchWizard: Launching live preview link on port ${port}...`,
-        cancellable: false,
-      },
-      async () => {
-        try {
-          const tunnel = await TunnelManager.startTunnel({ port });
-          statusBar?.updateTunnelState();
-          await deckProvider?.syncDeckState();
-
-          const action = await vscode.window.showInformationMessage(
-            `🟢 Live test link is ready: ${tunnel.url}`,
-            'Copy URL',
-            'Open Browser',
-            'Show Mobile QR'
-          );
-
-          if (action === 'Copy URL') {
-            await vscode.env.clipboard.writeText(tunnel.url);
-          } else if (action === 'Open Browser') {
-            await vscode.env.openExternal(vscode.Uri.parse(tunnel.url));
-          } else if (action === 'Show Mobile QR') {
-            await vscode.commands.executeCommand('launchwizard.showMobileQr');
-          }
-        } catch (err) {
-          statusBar?.updateTunnelState();
-          await deckProvider?.syncDeckState();
-          vscode.window.showErrorMessage(
-            `LaunchWizard Preview Error: ${err instanceof Error ? err.message : String(err)}`
-          );
-        }
-      }
+    const fixable = [...report.errors, ...report.warnings].some((e) => e.healerId);
+    const action = await vscode.window.showWarningMessage(
+      `🚨 LaunchWizard: ${report.summaryText}`,
+      ...(fixable ? ['Fix All (Preview)'] : []),
+      'View Details'
     );
-  };
+    if (action === 'Fix All (Preview)') await vscode.commands.executeCommand('launchwizard.autoHealAll');
+    if (action === 'View Details') await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
+  });
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.startPreview', handleStartPreview),
-    vscode.commands.registerCommand('launchwizard.startTunnel', handleStartPreview)
-  );
+  register('launchwizard.runBuildCheck', () => tools.runBuildCheck());
 
-  // 7. Command: Stop Preview / Tunnel
-  const handleStopPreview = () => {
-    const stopped = TunnelManager.stopTunnel();
-    statusBar?.updateTunnelState();
-    deckProvider?.syncDeckState();
-    if (stopped) {
-      vscode.window.showInformationMessage('🛑 LaunchWizard: Live preview link stopped.');
-    }
-  };
+  // --- Fixes ----------------------------------------------------------------------------
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.stopPreview', handleStopPreview),
-    vscode.commands.registerCommand('launchwizard.stopTunnel', handleStopPreview)
-  );
+  register('launchwizard.autoHealAll', async () => {
+    const root = projectRoot();
+    if (!root) return;
+    if (!state.report) await runCheck();
+    const applied = await heal.healWithPreview(root, state.allFindings());
+    if (applied > 0) await runCheck();
+  });
 
-  // 8. Command: Auto-Heal All Blockers
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.autoHealAll', async () => {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) return;
-      const projectRoot = workspaceFolders[0].uri.fsPath;
-
-      const report = await PreFlightEngine.run({ projectRoot });
-      if (report.errors.length === 0) {
-        vscode.window.showInformationMessage('LaunchWizard: No build blockers detected to heal.');
-        return;
-      }
-
-      const patches = AutoHealer.generatePatches(projectRoot, report.errors);
-      if (patches.length === 0) {
-        vscode.window.showInformationMessage('LaunchWizard: No automated patch rules matched current errors.');
-        return;
-      }
-
-      const result = AutoHealer.applyPatches(patches);
-      if (result.success) {
-        vscode.window.showInformationMessage(
-          `🪄 LaunchWizard: Successfully healed ${result.healedCount} issue(s)! Re-running pre-flight check...`
-        );
-        await deckProvider?.runPreFlightCheck();
-        statusBar?.updateTunnelState();
-      } else {
-        vscode.window.showErrorMessage(
-          `LaunchWizard: Failed to apply some patches: ${result.errors.join(', ')}`
-        );
-      }
-    })
-  );
-
-  // 9. Command: Show Mobile QR
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.showMobileQr', async () => {
-      const tunnel = TunnelManager.getStatus();
-      if (tunnel.status !== 'active') {
-        const launch = await vscode.window.showInformationMessage(
-          'No active live preview running. Would you like to launch one now?',
-          'Launch Preview'
-        );
-        if (launch === 'Launch Preview') {
-          await vscode.commands.executeCommand('launchwizard.startPreview');
-        }
-        return;
-      }
-
-      await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
-    })
-  );
-
-  // 10. Command: Activate Pro License
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.activateLicense', async () => {
-      const key = await vscode.window.showInputBox({
-        title: 'Activate LaunchWizard Pro Lifetime',
-        prompt: 'Enter your Pro License Key (or SHIP-PRO-XXXX-XXXX)',
-        ignoreFocusOut: true,
+  register('launchwizard.fixFinding', async (index: number) => {
+    const root = projectRoot();
+    const finding = [...(state.report?.errors ?? []), ...(state.report?.warnings ?? [])][index];
+    if (!root || !finding?.healerId) return;
+    const patches = AutoHealer.generatePatches(root, [finding], HealService.readCurrent);
+    if ((await heal.applyPatches(patches)) > 0) {
+      void vscode.window.showInformationMessage(`🪄 LaunchWizard: ${patches[0].description}.`, 'Undo').then((a) => {
+        if (a === 'Undo') void heal.undoLast();
       });
+      await runCheck();
+    }
+  });
 
-      if (!key) return;
+  register('launchwizard.undoLastHeal', async () => {
+    await heal.undoLast();
+    await runCheck();
+  });
 
-      const result = await licenseManager?.activateLicense(key);
-      if (result?.success) {
-        await context.globalState.update('launchwizard.licenseKey', key);
-        vscode.window.showInformationMessage(result.message);
-        await deckProvider?.syncDeckState();
-      } else {
-        vscode.window.showErrorMessage(result?.message ?? 'Activation failed.');
+  register('launchwizard.openFinding', async (file: string, line: number) => {
+    const root = projectRoot();
+    if (!root) return;
+    await ToolsService.openAt(root, file, line);
+  });
+
+  // --- Sharing ------------------------------------------------------------------------------
+
+  register('launchwizard.startPreview', () => share.start('standard'));
+  register('launchwizard.startTunnel', () => share.start('standard'));
+  register('launchwizard.startPrivatePreview', () => share.start('private'));
+  register('launchwizard.startCustomDomainPreview', () => share.start('custom-domain'));
+  register('launchwizard.setupCustomDomain', async () => {
+    if (!(await license.requirePro('Custom subdomains'))) return;
+    const named = await share.ensureCustomDomain(true);
+    if (named) void vscode.window.showInformationMessage(`LaunchWizard: ${named.hostname} is ready. Use "Share on My Domain" to go live.`);
+  });
+  register('launchwizard.shareExtraPort', () => share.shareExtraPort());
+  register('launchwizard.stopPreview', (id?: string) => share.stop(typeof id === 'string' ? id : 'primary'));
+  register('launchwizard.stopTunnel', (id?: string) => share.stop(typeof id === 'string' ? id : 'primary'));
+  register('launchwizard.copyLink', async () => {
+    const t = TunnelManager.getStatus();
+    if (t.status !== 'active') return;
+    await vscode.env.clipboard.writeText(t.shareUrl ?? t.url);
+    void vscode.window.showInformationMessage(`📋 Copied ${t.url}`);
+  });
+  register('launchwizard.showMobileQr', async () => {
+    if (TunnelManager.getStatus().status !== 'active') {
+      const launch = await vscode.window.showInformationMessage('No live link yet. Create one now?', 'Get Shareable Link');
+      if (launch) await share.start('standard');
+      return;
+    }
+    await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
+  });
+  register('launchwizard.copyPreviewCard', () => share.copyTeamCard());
+  register('launchwizard.saveQrImage', () => share.saveQrImage());
+  register('launchwizard.showVisitors', () => share.showVisitors());
+
+  // --- Ship Safe tools & deploy ----------------------------------------------------------------
+
+  register('launchwizard.scanSecrets', () => tools.scanSecrets());
+  register('launchwizard.togglePrePushGate', () => tools.togglePrePushGate());
+  register('launchwizard.checkDependencies', () => tools.checkDependencies());
+  register('launchwizard.checkBundleSize', () => tools.checkBundleSize());
+  register('launchwizard.exportReport', () => tools.exportReport());
+  register('launchwizard.connectVercel', () => deploys.connectVercel());
+  register('launchwizard.connectCloudflare', () => deploys.connectCloudflare());
+  register('launchwizard.disconnectDeployAccounts', () => deploys.disconnect());
+  register('launchwizard.deploy', () => deploys.deploy());
+
+  // --- License & links -------------------------------------------------------------------------
+
+  register('launchwizard.activateLicense', async () => {
+    const key = await vscode.window.showInputBox({
+      title: 'Activate LaunchWizard Pro',
+      prompt: 'Paste the license key from your Gumroad receipt',
+      placeHolder: 'XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX',
+      ignoreFocusOut: true,
+    });
+    if (!key) return;
+    const result = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'LaunchWizard: checking your key with Gumroad…' },
+      () => license.activate(key)
+    );
+    if (result.success) void vscode.window.showInformationMessage(result.message);
+    else void vscode.window.showErrorMessage(result.message);
+  });
+
+  register('launchwizard.licenseStatus', async () => {
+    const s = license.status();
+    if (!s.lastVerifiedAt) {
+      const choice = await vscode.window.showInformationMessage('LaunchWizard: you are on the free plan. All free features work without a key.', 'Get Pro', 'Enter Key');
+      if (choice === 'Get Pro') await vscode.env.openExternal(vscode.Uri.parse(PRICING_URL));
+      if (choice === 'Enter Key') await vscode.commands.executeCommand('launchwizard.activateLicense');
+      return;
+    }
+    const detail = [
+      `Key: ${s.key}`,
+      `Status: ${s.isActivated ? 'Pro active' : 'paused until the next successful online check'}`,
+      `Last checked with Gumroad: ${new Date(s.lastVerifiedAt).toLocaleString()}`,
+      `Works offline until: ${s.graceEndsAt ? new Date(s.graceEndsAt).toLocaleDateString() : 'n/a'}`,
+      s.uses ? `Machines: ${s.uses} of ${s.maxMachines}` : '',
+    ].filter(Boolean).join('\n');
+    const choice = await vscode.window.showInformationMessage('LaunchWizard Pro license', { modal: true, detail }, 'Re-check Now', 'Remove From This Machine', 'Request a Seat Reset');
+    if (choice === 'Re-check Now') {
+      await license.refreshIfDue();
+      void vscode.window.showInformationMessage(license.isPro() ? 'LaunchWizard: license confirmed.' : 'LaunchWizard: could not confirm the license right now.');
+    } else if (choice === 'Remove From This Machine') {
+      await license.remove();
+      const next = await vscode.window.showInformationMessage(
+        'LaunchWizard: license removed from this machine. Gumroad still counts the seat; ask support to free it if you need it elsewhere.',
+        'Request a Seat Reset'
+      );
+      if (next) await vscode.env.openExternal(vscode.Uri.parse(SUPPORT_URL));
+    } else if (choice === 'Request a Seat Reset') {
+      await vscode.env.openExternal(vscode.Uri.parse(SUPPORT_URL));
+    }
+  });
+
+  register('launchwizard.removeLicense', async () => {
+    await license.remove();
+    void vscode.window.showInformationMessage('LaunchWizard: license removed from this machine.');
+  });
+  register('launchwizard.buyLicense', () => vscode.env.openExternal(vscode.Uri.parse(PRICING_URL)));
+  register('launchwizard.openWebsite', () => vscode.env.openExternal(vscode.Uri.parse(WEBSITE_URL)));
+  register('launchwizard.showLog', () => Log.show());
+
+  // --- On save: Pro auto-fix, then a debounced Pro background check (B9) --------------------
+
+  let saveTimer: NodeJS.Timeout | null = null;
+  let rerunAfterCurrent = false;
+  const scheduleBackgroundCheck = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      saveTimer = null;
+      if (running) {
+        rerunAfterCurrent = true;
+        return;
       }
-    })
-  );
-
-  // 11. Command: Buy Pro License
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.buyLicense', async () => {
-      await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
-    })
-  );
-
-  // 12. Command: Open Website
-  context.subscriptions.push(
-    vscode.commands.registerCommand('launchwizard.openWebsite', async () => {
-      await vscode.env.openExternal(vscode.Uri.parse('https://launchwizard.taqnik.in'));
-    })
-  );
-
-  // Auto-check on save if user has workspace open
-  context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument(async () => {
-      const status = licenseManager?.getStatus();
-      if (status?.isActivated) {
-        // Pro users get passive background check on save
-        const report = await deckProvider?.runPreFlightCheck();
-        if (report) {
-          statusBar?.updateReport(report);
-        }
+      await runCheck();
+      if (rerunAfterCurrent) {
+        rerunAfterCurrent = false;
+        scheduleBackgroundCheck();
       }
-    })
+    }, SAVE_CHECK_DEBOUNCE_MS);
+  };
+
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
+      if (path.basename(document.uri.fsPath) === 'package.json') codeActions.invalidate();
+      await heal.onDidSave(document);
+      if (license.isPro() && Settings.checkOnSave) scheduleBackgroundCheck();
+    }),
+    { dispose: () => saveTimer && clearTimeout(saveTimer) }
   );
+
+  tools.refreshPrePushCli();
 }
 
 export function deactivate(): void {
-  statusBar?.dispose();
-  TunnelManager.stopTunnel();
+  TunnelManager.stopAll();
 }

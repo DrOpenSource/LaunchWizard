@@ -33,7 +33,12 @@ export interface PreFlightError {
   severity: DiagnosticSeverity;
   healerId?: string;
   proposedFix?: string;
+  /** Extra inputs a healer needs, e.g. the corrected import specifier. */
+  healData?: Record<string, string>;
 }
+
+/** 'safe' healers may run automatically on save; 'review' healers always need a preview first. */
+export type HealSafety = 'safe' | 'review';
 
 export interface PreFlightReport {
   framework: SupportedFramework;
@@ -60,25 +65,46 @@ export interface TranslatedError {
 
 export type TunnelStatus = 'idle' | 'starting' | 'active' | 'error' | 'stopped';
 
+export type TunnelProvider = 'cloudflare' | 'localhost.run' | 'localtunnel' | 'custom';
+
 export interface TunnelInfo {
   url: string;
   localPort: number;
-  provider: 'cloudflare' | 'localtunnel' | 'custom';
+  provider: TunnelProvider;
   qrCodeSvg: string;
   startedAt: number;
   uptimeSeconds: number;
   status: TunnelStatus;
   error?: string;
+  /** Session key: 'primary' or the extra port's label. */
+  id?: string;
+  label?: string;
+  /** The link to hand out (carries the access token for passcode-protected links). */
+  shareUrl?: string;
+  isProtected?: boolean;
+  passcode?: string;
+  expiresAt?: number;
+  visitorCount?: number;
+  /** The public hostname didn't resolve in time; the link may need another minute. */
+  dnsPending?: boolean;
 }
 
 export type LicenseTier = 'free' | 'pro';
 
 export interface LicenseState {
   tier: LicenseTier;
+  /** Masked for display, e.g. "6F0E…17E7". */
   key?: string;
-  activeMachines?: number;
   activatedAt?: number;
   isActivated: boolean;
+  lastVerifiedAt?: number;
+  /** Pro keeps working offline until this time; then it pauses until the next successful check. */
+  graceEndsAt?: number;
+  /** Machines this key has been activated on, as counted by Gumroad. */
+  uses?: number;
+  maxMachines: number;
+  /** A key is stored but has not been re-checked within the grace period. */
+  paused: boolean;
 }
 
 export interface AutoHealPatch {
