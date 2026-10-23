@@ -38,9 +38,10 @@ This document tracks all implementation phases, verification milestones, and ong
 
 All code for Phases 10–18 is built and tested (see [`docs/ROADMAP.md`](../ROADMAP.md)). Rule: everything runs at $0 for the maintainer (no paid servers; licensing is Gumroad-only, ADR-005). Remaining, all outward-facing or needing real accounts:
 
-- [ ] Commit and tag `v0.5.0`.
+- [x] Commit and tag `v0.5.0` (PR #1; CI green on Windows, macOS, Linux; [GitHub release](https://github.com/DrOpenSource/LaunchWizard/releases/tag/v0.5.0) published by CI).
 - [ ] Publish `launchwizard-0.5.0.vsix` (Marketplace: publisher page ⋮ → Update; Open VSX).
-- [ ] `npm run deploy:site`; paste the Gumroad copy from `docs/GUMROAD_LISTING.md`; enable "unique license key per sale".
+- [x] Site deployed to launchwizard.taqnik.in (2026-10-23).
+- [ ] Paste the Gumroad copy from `docs/GUMROAD_LISTING.md`; enable "unique license key per sale".
 - [ ] Hand tests: real Gumroad key activation, live Vercel / Cloudflare Pages deploy, live custom domain, macOS and Linux.
 
 ---

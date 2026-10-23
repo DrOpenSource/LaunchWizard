@@ -193,7 +193,7 @@ Phase 13 must ship before any new Pro feature: there is no point building paid f
 - [x] `PRIVACY.md` / `privacy.html`: disclose localhost.run (SSH), loca.lt and the npm registry download of localtunnel; drop the offline-HMAC claim.
 - [x] `npm run build:site` regenerated `public/`.
 - [ ] **Maintainer**: paste the updated description from `docs/GUMROAD_LISTING.md` into the live Gumroad page.
-- [ ] **Maintainer**: redeploy the site (`npm run deploy:site`).
+- [x] **Maintainer**: redeploy the site (`npm run deploy:site`). *(Done 2026-10-23 with v0.5.0.)*
 - [x] Marketplace README refresh: included in `launchwizard-0.5.0.vsix`; goes live when the maintainer publishes it.
 
 ---
