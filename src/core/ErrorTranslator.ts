@@ -15,7 +15,8 @@ export class ErrorTranslator {
       explanation: entry.explanation,
       whyItBreaks: entry.whyItBreaks,
       actionPrompt: entry.actionPrompt,
-      autoFixAvailable: entry.autoFixAvailable,
+      // Only claim a fix when a healer is actually attached to this finding.
+      autoFixAvailable: Boolean(error.healerId),
     };
   }
 

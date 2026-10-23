@@ -139,9 +139,159 @@ export const ERROR_GLOSSARY: Record<string, GlossaryEntry> = {
     whyItBreaks:
       'Next.js hides non-public environment variables from client bundles for security. In production, this value will be undefined.',
     actionPrompt:
-      'Rename the variable to NEXT_PUBLIC_<NAME> in your code and in your .env file.',
+      'If the value is safe for anyone to see, rename it to NEXT_PUBLIC_<NAME> in your code AND in your .env file. If it is private, read it in server code (a Route Handler or Server Action) instead.',
+    autoFixAvailable: false,
+  },
+
+  // Import path letter case differs from the file on disk
+  IMPORT_CASE_MISMATCH: {
+    code: 'IMPORT_CASE_MISMATCH',
+    badge: '🔤 Import Letter Case',
+    friendlyTitle: 'Import Works Here, Breaks on the Server',
+    explanation:
+      'An import uses different capital letters than the real file name (e.g. "./button" for "Button.tsx").',
+    whyItBreaks:
+      'Windows and macOS ignore letter case, so it works on your machine. Vercel and Cloudflare build on Linux, which treats it as a missing file.',
+    actionPrompt:
+      'Use the 1-click fix to match the import to the exact file name.',
     autoFixAvailable: true,
-    healerId: 'prefix-next-public',
+  },
+
+  // .env value cut off at '#'
+  ENV_VALUE_TRUNCATED: {
+    code: 'ENV_VALUE_TRUNCATED',
+    badge: '✂️ .env Value Cut Off',
+    friendlyTitle: 'Part of This .env Value Is Ignored',
+    explanation:
+      'A value in your .env file contains "#" without quotes, so everything after it is treated as a comment.',
+    whyItBreaks:
+      'Passwords and URLs with "#" silently arrive shortened, causing login and connection failures that are hard to trace.',
+    actionPrompt:
+      'Wrap the value in double quotes. The 1-click fix does this for you.',
+    autoFixAvailable: true,
+  },
+
+  // Next.js build-time type error
+  NEXT_TYPE_ERROR: {
+    code: 'NEXT_TYPE_ERROR',
+    badge: '🧩 Build Type Error',
+    friendlyTitle: 'The Production Build Found a Type Error',
+    explanation:
+      'Next.js type-checks your code during `next build` and found a problem.',
+    whyItBreaks:
+      'Vercel runs the same build, so this exact error will stop your deployment.',
+    actionPrompt:
+      'Open the file and line shown and fix the type mismatch, then run the build check again.',
+    autoFixAvailable: false,
+  },
+
+  // Build failed without a parseable error
+  BUILD_FAILED: {
+    code: 'BUILD_FAILED',
+    badge: '🏗️ Build Failed',
+    friendlyTitle: 'The Production Build Failed',
+    explanation:
+      'Your framework\'s production build stopped with an error. The last lines of its output are shown.',
+    whyItBreaks:
+      'The deploy server runs the same build command, so the deployment will fail the same way.',
+    actionPrompt:
+      'Open the LaunchWizard output log to see the full build output, fix the first error, and try again.',
+    autoFixAvailable: false,
+  },
+
+  BUILD_TIMEOUT: {
+    code: 'BUILD_TIMEOUT',
+    badge: '⏱️ Build Timed Out',
+    friendlyTitle: 'The Production Build Took Too Long',
+    explanation:
+      'The build was stopped before it finished, so its result is unknown.',
+    whyItBreaks:
+      'An unfinished build is not a passing build.',
+    actionPrompt:
+      'Check the output log for a step that hangs (often a network fetch during pre-rendering).',
+    autoFixAvailable: false,
+  },
+
+  BUNDLE_GROWTH: {
+    code: 'BUNDLE_GROWTH',
+    badge: '📈 Bundle Grew',
+    friendlyTitle: 'Your JavaScript Got Much Bigger',
+    explanation:
+      'The JavaScript visitors download grew noticeably since your last build.',
+    whyItBreaks:
+      'It won\'t break the build, but pages load slower, especially on phones and slow connections.',
+    actionPrompt:
+      'Check the largest files listed. A new heavy library or a whole-library import (instead of one function) is the usual cause.',
+    autoFixAvailable: false,
+  },
+
+  BUNDLE_OVER_BUDGET: {
+    code: 'BUNDLE_OVER_BUDGET',
+    badge: '⚖️ Over Size Budget',
+    friendlyTitle: 'JavaScript Is Over Your Size Budget',
+    explanation:
+      'Visitors download more JavaScript than the budget you set.',
+    whyItBreaks:
+      'It won\'t break the build, but large bundles slow down first load and hurt mobile users.',
+    actionPrompt:
+      'Lazy-load heavy components, remove unused libraries, or raise the budget in settings if this size is expected.',
+    autoFixAvailable: false,
+  },
+
+  // Secret-looking variable read from browser code
+  ENV_SECRET_IN_CLIENT: {
+    code: 'ENV_SECRET_IN_CLIENT',
+    badge: '🔐 Secret in Browser Code',
+    friendlyTitle: 'Private Value Read in the Browser',
+    explanation:
+      'Browser code reads an environment variable whose name looks like a secret (a key, token or password).',
+    whyItBreaks:
+      'The value is undefined in the browser. Adding a public prefix would "fix" that by publishing your secret to every visitor.',
+    actionPrompt:
+      'Move this read into server code (a Route Handler, Server Action or API endpoint) and send the browser only the result it needs.',
+    autoFixAvailable: false,
+  },
+
+  // TypeScript missing from the project
+  TS_NOT_INSTALLED: {
+    code: 'TS_NOT_INSTALLED',
+    badge: '📦 Dependencies Missing',
+    friendlyTitle: 'TypeScript Is Not Installed Yet',
+    explanation:
+      'This project uses TypeScript, but the compiler is not in node_modules, so LaunchWizard could not check your code.',
+    whyItBreaks:
+      'Without a type check, LaunchWizard cannot tell you the project is safe to ship. The deploy server will install packages and may fail there instead.',
+    actionPrompt:
+      'Run your install command (e.g. `npm install`) in the project folder, then run the check again.',
+    autoFixAvailable: false,
+  },
+
+  // Type check exceeded its time budget
+  PREFLIGHT_TIMEOUT: {
+    code: 'PREFLIGHT_TIMEOUT',
+    badge: '⏱️ Check Timed Out',
+    friendlyTitle: 'The Type Check Took Too Long',
+    explanation:
+      'The TypeScript check was stopped before it finished, so its result is unknown.',
+    whyItBreaks:
+      'An unfinished check is not a passing check. Errors may still be hiding in your project.',
+    actionPrompt:
+      'Raise the "LaunchWizard: Preflight Timeout Seconds" setting for large projects and run the check again.',
+    autoFixAvailable: false,
+  },
+
+  // Compiler failed with unreadable output
+  TSC_UNPARSED: {
+    code: 'TSC_UNPARSED',
+    badge: '⚠️ Check Failed',
+    friendlyTitle: 'The Type Check Failed Unexpectedly',
+    explanation:
+      'The TypeScript compiler stopped with an error LaunchWizard could not read. The message shows its last output lines.',
+    whyItBreaks:
+      'The same failure will most likely stop your production build.',
+    actionPrompt:
+      'Run `npx tsc --noEmit` in a terminal in the project folder to see the full message.',
+    autoFixAvailable: false,
   },
 
   // Vite Process Env Misuse
@@ -154,9 +304,8 @@ export const ERROR_GLOSSARY: Record<string, GlossaryEntry> = {
     whyItBreaks:
       'Accessing `process.env` in the browser under Vite throws a runtime "process is not defined" error.',
     actionPrompt:
-      'Use `import.meta.env.VITE_<NAME>` instead of `process.env.<NAME>`.',
-    autoFixAvailable: true,
-    healerId: 'fix-vite-env',
+      'Use `import.meta.env.VITE_<NAME>` instead of `process.env.<NAME>`, and rename the variable to VITE_<NAME> in .env. Only do this for values that are safe for anyone to see.',
+    autoFixAvailable: false,
   },
 
   // Next.js Unconfigured Image Hostname

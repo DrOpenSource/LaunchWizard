@@ -2,12 +2,12 @@
   "name": "launchwizard",
   "displayName": "LaunchWizard",
   "description": "Pre-flight build check & 1-click shareable preview engine for vibe coders. Catch production TypeScript & bundler build errors before deploy, and get instant mobile preview links.",
-  "version": "0.2.2",
+  "version": "0.5.0",
   "pricing": "Free",
   "publisher": "dr-opensource",
   "author": "Dr. Shubham Kashyap",
   "license": "MIT",
-  "icon": "assets/icon.png",
+  "icon": "assets/icon-marketplace.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/DrOpenSource/LaunchWizard.git"
@@ -42,42 +42,177 @@
     "commands": [
       {
         "command": "launchwizard.runPreFlight",
-        "title": "LaunchWizard: Run Pre-Flight Build Check",
+        "title": "Run Pre-Flight Check",
         "category": "LaunchWizard"
       },
       {
-        "command": "launchwizard.startPreview",
-        "title": "LaunchWizard: 1-Click Get Live Shareable Preview Link",
-        "category": "LaunchWizard"
-      },
-      {
-        "command": "launchwizard.stopPreview",
-        "title": "LaunchWizard: Stop Active Preview Link",
+        "command": "launchwizard.runBuildCheck",
+        "title": "Run Full Production Build Check",
         "category": "LaunchWizard"
       },
       {
         "command": "launchwizard.autoHealAll",
-        "title": "LaunchWizard: 1-Click Auto-Heal Build Blockers",
+        "title": "Fix All Build Blockers (Preview First)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.undoLastHeal",
+        "title": "Undo Last Fix",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.startPreview",
+        "title": "Get Shareable Link",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.stopPreview",
+        "title": "Stop Shareable Link",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.copyLink",
+        "title": "Copy Live Link",
         "category": "LaunchWizard"
       },
       {
         "command": "launchwizard.showMobileQr",
-        "title": "LaunchWizard: Show Mobile QR Code",
+        "title": "Show Phone QR Code",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.startPrivatePreview",
+        "title": "Get Private Link with Passcode (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.startCustomDomainPreview",
+        "title": "Share on My Domain (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.setupCustomDomain",
+        "title": "Set Up or Change My Preview Domain (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.shareExtraPort",
+        "title": "Share Another Port (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.copyPreviewCard",
+        "title": "Copy Team Preview Card (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.saveQrImage",
+        "title": "Save QR Code Image (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.showVisitors",
+        "title": "Show Link Visitors (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.scanSecrets",
+        "title": "Scan for Leaked Secrets (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.togglePrePushGate",
+        "title": "Turn Pre-Push Gate On/Off (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.checkDependencies",
+        "title": "Check Dependency Health (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.checkBundleSize",
+        "title": "Check Bundle Size (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.exportReport",
+        "title": "Export Pre-Flight Report (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.deploy",
+        "title": "Deploy to Vercel or Cloudflare Pages (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.connectVercel",
+        "title": "Connect Vercel Account (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.connectCloudflare",
+        "title": "Connect Cloudflare Account (Pro)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.disconnectDeployAccounts",
+        "title": "Disconnect Deploy Accounts",
         "category": "LaunchWizard"
       },
       {
         "command": "launchwizard.activateLicense",
-        "title": "LaunchWizard: Activate Pro License",
+        "title": "Activate Pro License",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.licenseStatus",
+        "title": "Show License Status",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.removeLicense",
+        "title": "Remove License From This Machine",
         "category": "LaunchWizard"
       },
       {
         "command": "launchwizard.buyLicense",
-        "title": "LaunchWizard: Get Pro Lifetime License",
+        "title": "Get Pro Lifetime License",
         "category": "LaunchWizard"
       },
       {
         "command": "launchwizard.openWebsite",
-        "title": "LaunchWizard: Visit Documentation Website",
+        "title": "Visit Documentation Website",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.showLog",
+        "title": "Show Log",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.openMenu",
+        "title": "Open Quick Menu",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.fixFinding",
+        "title": "Fix Finding",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.openFinding",
+        "title": "Open Finding",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.startTunnel",
+        "title": "Get Shareable Link (alias)",
+        "category": "LaunchWizard"
+      },
+      {
+        "command": "launchwizard.stopTunnel",
+        "title": "Stop Shareable Link (alias)",
         "category": "LaunchWizard"
       }
     ],
@@ -98,6 +233,74 @@
           "name": "Pre-Flight Deck"
         }
       ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "launchwizard.fixFinding",
+          "when": "false"
+        },
+        {
+          "command": "launchwizard.openFinding",
+          "when": "false"
+        },
+        {
+          "command": "launchwizard.startTunnel",
+          "when": "false"
+        },
+        {
+          "command": "launchwizard.stopTunnel",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LaunchWizard",
+      "properties": {
+        "launchwizard.preflightTimeoutSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 10,
+          "description": "How long the TypeScript check may run before it is reported as timed out (never as passing). Raise it for large projects."
+        },
+        "launchwizard.checkOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pro: re-run the pre-flight check in the background after you save (debounced)."
+        },
+        "launchwizard.healOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pro: automatically apply safe fixes on save (missing 'use client', import letter case, .env values cut at #). Every fix can be undone."
+        },
+        "launchwizard.secretGuard": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pro: scan for hard-coded secrets before sharing a link or deploying."
+        },
+        "launchwizard.share.logVisitors": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pro: keep a local log of who opens your preview links (device, browser, page). Stored in memory only."
+        },
+        "launchwizard.share.defaultExpiryMinutes": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Pro: close preview links automatically after this many minutes (0 = until you stop them)."
+        },
+        "launchwizard.bundleBudgetKb": {
+          "type": "number",
+          "default": 250,
+          "minimum": 0,
+          "description": "Pro: warn when gzipped client JavaScript exceeds this size in KB (0 = no budget)."
+        },
+        "launchwizard.customDomain.hostname": {
+          "type": "string",
+          "default": "",
+          "description": "Pro: your preview subdomain on a domain in your Cloudflare account, e.g. preview.example.com."
+        }
+      }
     }
   },
   "scripts": {
@@ -112,11 +315,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
-    "@types/vscode": "^1.90.0",
-    "esbuild": "^0.25.0",
+    "@types/vscode": "~1.90.0",
+    "esbuild": "^0.28.2",
     "jsqr": "1.4.0",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "qrcode-generator": "1.4.4"

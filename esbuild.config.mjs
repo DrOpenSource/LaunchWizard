@@ -16,13 +16,23 @@ const buildOptions = {
   logLevel: 'info',
 };
 
+/** Stand-alone checker for the Pre-Push Gate git hook (core only, no VS Code APIs). */
+const cliOptions = {
+  ...buildOptions,
+  entryPoints: ['src/cli/preflight.ts'],
+  outfile: 'dist/cli.js',
+  external: [],
+  sourcemap: false,
+};
+
 async function main() {
   if (watch) {
     const ctx = await esbuild.context(buildOptions);
-    await ctx.watch();
+    const cliCtx = await esbuild.context(cliOptions);
+    await Promise.all([ctx.watch(), cliCtx.watch()]);
     console.log('Watching for changes...');
   } else {
-    await esbuild.build(buildOptions);
+    await Promise.all([esbuild.build(buildOptions), esbuild.build(cliOptions)]);
     console.log('Build complete.');
   }
 }

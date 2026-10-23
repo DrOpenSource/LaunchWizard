@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as zlib from 'node:zlib';
 import jsQR from 'jsqr';
 import { QrGenerator } from '../src/core/QrGenerator.js';
 
@@ -78,5 +79,40 @@ describe('QrGenerator (real, scannable QR codes)', () => {
       }
     }
     expect(jsQR(pixels, size, size)).toBeNull();
+  });
+});
+
+describe('QrGenerator PNG output (team preview cards)', () => {
+  /** Minimal decoder for the generator's own PNG: grayscale, 8-bit, filter 0, single IDAT. */
+  function decodePng(png: Buffer): { width: number; pixels: Uint8ClampedArray } {
+    expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    let offset = 8;
+    let width = 0;
+    const idat: Buffer[] = [];
+    while (offset < png.length) {
+      const length = png.readUInt32BE(offset);
+      const type = png.subarray(offset + 4, offset + 8).toString('ascii');
+      const data = png.subarray(offset + 8, offset + 8 + length);
+      if (type === 'IHDR') width = data.readUInt32BE(0);
+      if (type === 'IDAT') idat.push(data);
+      offset += 12 + length;
+    }
+    const raw = zlib.inflateSync(Buffer.concat(idat));
+    const pixels = new Uint8ClampedArray(width * width * 4);
+    for (let y = 0; y < width; y++) {
+      for (let x = 0; x < width; x++) {
+        const v = raw[y * (width + 1) + 1 + x];
+        const i = (y * width + x) * 4;
+        pixels[i] = pixels[i + 1] = pixels[i + 2] = v;
+        pixels[i + 3] = 255;
+      }
+    }
+    return { width, pixels };
+  }
+
+  it('encodes a PNG that decodes back to the share link', () => {
+    const url = 'https://team-card.trycloudflare.com/?lw=abcDEF123_-xyz';
+    const { width, pixels } = decodePng(QrGenerator.generatePng(url, 6));
+    expect(jsQR(pixels, width, width)?.data).toBe(url);
   });
 });

@@ -1,10 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TunnelManager } from '../src/core/TunnelManager.js';
 import { QrGenerator } from '../src/core/QrGenerator.js';
 import * as http from 'node:http';
 import { EventEmitter } from 'node:events';
 
 describe('TunnelManager & QrGenerator', () => {
+  // Real DNS waits are covered by the live smoke test; unit tests use fake hostnames.
+  beforeEach(() => {
+    vi.spyOn(TunnelManager, 'waitForPublicDns').mockResolvedValue(true);
+  });
 
   it('extracts Cloudflare Quick Tunnel URLs from stdout stream', () => {
     const output = [
@@ -84,15 +88,16 @@ describe('TunnelManager & QrGenerator', () => {
     fakeChild.pid = 99999;
     fakeChild.kill = vi.fn();
 
-    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockReturnValue(fakeChild);
-
-    try {
-      const tunnelPromise = TunnelManager.startTunnel({ port: 3000, timeoutMs: 5000 });
-
-      // Simulate child process emitting tunnel URL
+    // Emit the URL only once the process has actually been launched (provider and host detection run first).
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation(() => {
       setTimeout(() => {
         fakeChild.stdout.emit('data', Buffer.from('your url is: https://test-mock-preview.loca.lt\n'));
       }, 10);
+      return fakeChild;
+    });
+
+    try {
+      const tunnelPromise = TunnelManager.startTunnel({ port: 3000, timeoutMs: 5000 });
 
       const tunnel = await tunnelPromise;
       expect(tunnel.status).toBe('active');
@@ -123,16 +128,15 @@ describe('TunnelManager & QrGenerator', () => {
 
     const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((provider) => {
       expect(provider).toBe('localhost.run');
+      // Simulate localhost.run stdout once the process exists (host detection runs first).
+      setTimeout(() => {
+        fakeChild.stdout.emit('data', Buffer.from('f95a5479518502.lhr.life tunneled with tls termination, https://f95a5479518502.lhr.life\n'));
+      }, 10);
       return fakeChild;
     });
 
     try {
       const tunnelPromise = TunnelManager.startTunnel({ port: 5173, provider: 'localhost.run', timeoutMs: 5000 });
-
-      // Simulate localhost.run stdout stream
-      setTimeout(() => {
-        fakeChild.stdout.emit('data', Buffer.from('f95a5479518502.lhr.life tunneled with tls termination, https://f95a5479518502.lhr.life\n'));
-      }, 10);
 
       const tunnel = await tunnelPromise;
       expect(tunnel.status).toBe('active');
@@ -163,27 +167,21 @@ describe('TunnelManager & QrGenerator', () => {
     lhrChild.kill = vi.fn();
 
     const cfAvailableSpy = vi.spyOn(TunnelManager, 'isCloudflaredAvailable').mockReturnValue(true);
+    const sshSpy = vi.spyOn(TunnelManager, 'isSshAvailable').mockReturnValue(true);
     let calls = 0;
+    // Events fire only after each process is launched, so host detection timing can't race them.
     const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((provider) => {
       calls++;
       if (provider === 'cloudflare') {
+        setTimeout(() => cfChild.emit('exit', 1), 10);
         return cfChild;
       }
+      setTimeout(() => lhrChild.stdout.emit('data', Buffer.from('Connect via https://dev-fallback.lhr.life\n')), 10);
       return lhrChild;
     });
 
     try {
       const tunnelPromise = TunnelManager.startTunnel({ port: 3000, provider: 'cloudflare', timeoutMs: 5000 });
-
-      // Trigger exit on first provider (cloudflare)
-      setTimeout(() => {
-        cfChild.emit('exit', 1);
-      }, 10);
-
-      // Second provider (localhost.run) succeeds
-      setTimeout(() => {
-        lhrChild.stdout.emit('data', Buffer.from('Connect via https://dev-fallback.lhr.life\n'));
-      }, 30);
 
       const tunnel = await tunnelPromise;
       expect(calls).toBe(2);
@@ -194,8 +192,152 @@ describe('TunnelManager & QrGenerator', () => {
       TunnelManager.stopTunnel();
     } finally {
       cfAvailableSpy.mockRestore();
+      sshSpy.mockRestore();
       launchSpy.mockRestore();
       TunnelManager.stopTunnel();
+    }
+  });
+
+  const makeChild = (pid: number) => {
+    const child = new EventEmitter() as any;
+    child.stdout = new EventEmitter();
+    child.stderr = new EventEmitter();
+    child.pid = pid;
+    child.kill = vi.fn();
+    return child;
+  };
+
+  it('B4: a late exit from a timed-out process cannot orphan the fallback tunnel', async () => {
+    const cfChild = makeChild(1);
+    const lhrChild = makeChild(2);
+    const sshSpy = vi.spyOn(TunnelManager, 'isSshAvailable').mockReturnValue(true);
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((provider) => {
+      if (provider === 'cloudflare') return cfChild;
+      setTimeout(() => lhrChild.stdout.emit('data', Buffer.from('https://late-exit.lhr.life\n')), 10);
+      return lhrChild;
+    });
+
+    try {
+      // Cloudflare never prints a URL, so it times out and we fall back.
+      const tunnel = await TunnelManager.startTunnel({ port: 3001, provider: 'cloudflare', timeoutMs: 100, targetHost: '127.0.0.1' });
+      expect(tunnel.provider).toBe('localhost.run');
+
+      // The killed Cloudflare process reports its exit only now.
+      cfChild.emit('exit', 1);
+      expect(TunnelManager.getStatus().status).toBe('active');
+
+      expect(TunnelManager.stopTunnel()).toBe(true);
+      expect(lhrChild.kill).toHaveBeenCalled();
+      expect(TunnelManager.getStatus().status).toBe('idle');
+    } finally {
+      sshSpy.mockRestore();
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
+    }
+  });
+
+  it('B6: a start can be cancelled while connecting', async () => {
+    const child = makeChild(3);
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockReturnValue(child);
+    const controller = new AbortController();
+    try {
+      const promise = TunnelManager.startTunnel({ port: 3002, provider: 'cloudflare', timeoutMs: 5000, signal: controller.signal, targetHost: '127.0.0.1' });
+      setTimeout(() => controller.abort(), 20);
+      await expect(promise).rejects.toThrow(/cancelled/);
+      expect(child.kill).toHaveBeenCalled();
+      expect(launchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
+    }
+  });
+
+  it('B7/B10: forwards to IPv6 when needed and reports an unexpected close', async () => {
+    const child = makeChild(4);
+    const changes: string[] = [];
+    const listener = (info: { status: string }) => changes.push(info.status);
+    TunnelManager.events.on('change', listener);
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation((_p, _port, host) => {
+      expect(host).toBe('::1');
+      setTimeout(() => child.stdout.emit('data', Buffer.from('https://v6-test.trycloudflare.com\n')), 10);
+      return child;
+    });
+    try {
+      await TunnelManager.startTunnel({ port: 3003, provider: 'cloudflare', targetHost: '::1', timeoutMs: 5000 });
+      child.emit('exit', 1);
+      const status = TunnelManager.getStatus();
+      expect(status.status).toBe('error');
+      expect(status.error).toContain('closed unexpectedly');
+      expect(changes).toEqual(expect.arrayContaining(['starting', 'active', 'error']));
+    } finally {
+      TunnelManager.events.off('change', listener);
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
+    }
+  });
+
+  it('expires a link automatically', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const child = makeChild(5);
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation(() => {
+      setTimeout(() => child.stdout.emit('data', Buffer.from('https://expiring.trycloudflare.com\n')), 1);
+      return child;
+    });
+    try {
+      const promise = TunnelManager.startTunnel({ port: 3004, provider: 'cloudflare', targetHost: '127.0.0.1', expiresInMinutes: 30, timeoutMs: 5000 });
+      await vi.advanceTimersByTimeAsync(5);
+      const tunnel = await promise;
+      expect(tunnel.expiresAt).toBeGreaterThan(Date.now());
+      await vi.advanceTimersByTimeAsync(30 * 60000);
+      expect(TunnelManager.getStatus().status).toBe('idle');
+      expect(child.kill).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
+    }
+  });
+
+  it('runs extra tunnels for multi-port sharing independently', async () => {
+    const children = [makeChild(6), makeChild(7)];
+    let n = 0;
+    const launchSpy = vi.spyOn(TunnelManager as any, 'launchProcess').mockImplementation(() => {
+      const child = children[n];
+      const id = n++;
+      setTimeout(() => child.stdout.emit('data', Buffer.from(`https://port-${id}.trycloudflare.com\n`)), 5);
+      return child;
+    });
+    try {
+      await TunnelManager.startTunnel({ port: 3005, provider: 'cloudflare', targetHost: '127.0.0.1' });
+      await TunnelManager.startExtraTunnel('api', { port: 8000, provider: 'cloudflare', targetHost: '127.0.0.1', label: 'API' });
+      expect(TunnelManager.listTunnels().map((t) => t.url).sort()).toEqual(['https://port-0.trycloudflare.com', 'https://port-1.trycloudflare.com']);
+      TunnelManager.stopTunnel('api');
+      expect(TunnelManager.listTunnels()).toHaveLength(1);
+      expect(children[1].kill).toHaveBeenCalled();
+      expect(children[0].kill).not.toHaveBeenCalled();
+    } finally {
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
+    }
+  });
+
+  it("waits for public DNS on Cloudflare links and flags a slow one instead of failing", async () => {
+    vi.mocked(TunnelManager.waitForPublicDns).mockResolvedValueOnce(false);
+    const child = makeChild(8);
+    const stages: string[] = [];
+    const launchSpy = vi.spyOn(TunnelManager as any, "launchProcess").mockImplementation(() => {
+      setTimeout(() => child.stdout.emit("data", Buffer.from("https://slow-dns.trycloudflare.com\n")), 5);
+      return child;
+    });
+    try {
+      const t = await TunnelManager.startTunnel({ port: 3006, provider: "cloudflare", targetHost: "127.0.0.1", onStage: (m) => stages.push(m) });
+      expect(TunnelManager.waitForPublicDns).toHaveBeenCalledWith("slow-dns.trycloudflare.com", 45000, undefined);
+      expect(t.status).toBe("active");
+      expect(t.dnsPending).toBe(true);
+      expect(stages[0]).toContain("go live");
+    } finally {
+      launchSpy.mockRestore();
+      TunnelManager.stopAll();
     }
   });
 });

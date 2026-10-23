@@ -1,138 +1,110 @@
 import * as vscode from 'vscode';
 import { TunnelManager } from '../core/TunnelManager.js';
-import type { PreFlightReport } from '../shared/types.js';
+import type { AppState } from './AppState.js';
 
-export class StatusBarController {
-  private statusBarItem: vscode.StatusBarItem;
-  private currentReport: PreFlightReport | null = null;
+/**
+ * Status bar "radar": build state plus live-link state. Updates itself from tunnel events (B10),
+ * so a link that closes unexpectedly never keeps showing as live.
+ */
+export class StatusBarController implements vscode.Disposable {
+  private readonly item: vscode.StatusBarItem;
+  private readonly onTunnel = () => this.render();
+  private readonly subscription: vscode.Disposable;
 
-  constructor() {
-    this.statusBarItem = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Right,
-      100
-    );
-    this.statusBarItem.command = 'launchwizard.openMenu';
-    this.setReadyState();
-    this.statusBarItem.show();
+  constructor(private readonly state: AppState) {
+    this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    this.item.command = 'launchwizard.openMenu';
+    TunnelManager.events.on('change', this.onTunnel);
+    this.subscription = state.onDidChange(() => this.render());
+    this.render();
+    this.item.show();
   }
 
-  public setReadyState(): void {
-    const tunnel = TunnelManager.getStatus();
-    if (tunnel.status === 'active') {
-      this.statusBarItem.text = `$(globe) Launch: Live (${tunnel.localPort})`;
-      this.statusBarItem.tooltip = `LaunchWizard: Tunnel active at ${tunnel.url}. Click to copy or inspect.`;
-      this.statusBarItem.backgroundColor = undefined;
+  public render(): void {
+    const tunnels = TunnelManager.listTunnels();
+    const live = tunnels.filter((t) => t.status === 'active');
+    const starting = tunnels.some((t) => t.status === 'starting');
+    const report = this.state.report;
+
+    if (this.state.checking) {
+      this.item.text = '$(sync~spin) Launch: Checking…';
+      this.item.tooltip = 'LaunchWizard is checking your project';
+      this.item.backgroundColor = undefined;
+      return;
+    }
+
+    if (report && !report.passed) {
+      const n = report.errors.length;
+      this.item.text = `$(error) Launch: ${n} Blocker${n > 1 ? 's' : ''}${live.length ? ` · $(globe) ${live.length}` : ''}`;
+      this.item.tooltip = `LaunchWizard: ${n} build blocker${n > 1 ? 's' : ''}. Click for actions.`;
+      this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+      return;
+    }
+
+    this.item.backgroundColor = undefined;
+    if (starting) {
+      this.item.text = '$(sync~spin) Launch: Connecting…';
+      this.item.tooltip = 'LaunchWizard is creating your preview link';
+    } else if (live.length > 0) {
+      const primary = live.find((t) => t.id === 'primary') ?? live[0];
+      this.item.text = `$(globe) Launch: Live (${primary.localPort})${live.length > 1 ? ` +${live.length - 1}` : ''}${primary.isProtected ? ' $(lock)' : ''}`;
+      this.item.tooltip = `LaunchWizard: live at ${primary.url}. Click to copy or stop.`;
+    } else if (report?.passed) {
+      this.item.text = '$(check) Launch: Build Passed';
+      this.item.tooltip = 'LaunchWizard: all pre-flight checks passed';
     } else {
-      this.statusBarItem.text = '$(rocket) Launch: Ready';
-      this.statusBarItem.tooltip = 'LaunchWizard: Pre-flight engine ready. Click for quick ship actions.';
-      this.statusBarItem.backgroundColor = undefined;
+      this.item.text = '$(rocket) Launch: Ready';
+      this.item.tooltip = 'LaunchWizard: click for quick actions';
     }
   }
 
-  public setCheckingState(): void {
-    this.statusBarItem.text = '$(sync~spin) Launch: Checking Build...';
-    this.statusBarItem.tooltip = 'LaunchWizard: Inspecting TypeScript and production bundle sanity...';
-    this.statusBarItem.backgroundColor = undefined;
-  }
-
-  public updateReport(report: PreFlightReport): void {
-    this.currentReport = report;
-    const tunnel = TunnelManager.getStatus();
-
-    if (!report.passed) {
-      const errCount = report.errors.length;
-      this.statusBarItem.text = `$(error) Launch: ${errCount} Blocker${errCount > 1 ? 's' : ''}`;
-      this.statusBarItem.tooltip = `LaunchWizard: ${errCount} build blockers detected. Click to auto-heal.`;
-      this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-        'statusBarItem.warningBackground'
-      );
-    } else if (tunnel.status === 'active') {
-      this.statusBarItem.text = `$(globe) Launch: Live (${tunnel.localPort})`;
-      this.statusBarItem.tooltip = `LaunchWizard: Clean build! Tunnel active at ${tunnel.url}`;
-      this.statusBarItem.backgroundColor = undefined;
-    } else {
-      this.statusBarItem.text = '$(check) Launch: Build Passed';
-      this.statusBarItem.tooltip = 'LaunchWizard: All production build pre-flight checks passed!';
-      this.statusBarItem.backgroundColor = undefined;
-    }
-  }
-
-  public updateTunnelState(): void {
-    if (this.currentReport && !this.currentReport.passed) {
-      this.updateReport(this.currentReport);
-    } else {
-      this.setReadyState();
-    }
-  }
-
-  public async showQuickMenu(): Promise<void> {
-    const tunnel = TunnelManager.getStatus();
-    const items: vscode.QuickPickItem[] = [
-      {
-        label: '$(search) Run Pre-Flight Build Check',
-        description: 'Verify TypeScript and bundle builds before pushing',
-      },
+  public async showQuickMenu(isPro: boolean): Promise<void> {
+    const primary = TunnelManager.getStatus();
+    const pro = (label: string) => (isPro ? label : `${label}  ·  Pro`);
+    const items: Array<vscode.QuickPickItem & { command?: string; args?: unknown[] }> = [
+      { label: '$(search) Run Pre-Flight Check', description: 'type check + env + file traps', command: 'launchwizard.runPreFlight' },
+      { label: '$(tools) Run Full Production Build Check', description: 'your real build command', command: 'launchwizard.runBuildCheck' },
     ];
 
-    if (tunnel.status === 'active') {
+    if (this.state.allFindings().some((f) => f.healerId)) {
+      items.push({ label: '$(wand) Fix All (with preview)', command: 'launchwizard.autoHealAll' });
+    }
+
+    items.push({ label: 'Share', kind: vscode.QuickPickItemKind.Separator });
+    if (primary.status === 'active') {
       items.push(
-        {
-          label: '$(copy) Copy Live Tunnel Link',
-          description: tunnel.url,
-        },
-        {
-          label: '$(device-mobile) Show Mobile QR Code',
-          description: 'Scan with your phone to test the live app',
-        },
-        {
-          label: '$(circle-slash) Stop Active Tunnel',
-          description: `Close tunnel on port ${tunnel.localPort}`,
-        }
+        { label: '$(copy) Copy Live Link', description: primary.url, command: 'launchwizard.copyLink' },
+        { label: '$(device-mobile) Show Phone QR Code', command: 'launchwizard.showMobileQr' },
+        { label: pro('$(note) Copy Team Preview Card'), command: 'launchwizard.copyPreviewCard' },
+        { label: pro('$(add) Share Another Port'), command: 'launchwizard.shareExtraPort' },
+        { label: '$(circle-slash) Stop Link', description: `port ${primary.localPort}`, command: 'launchwizard.stopPreview' }
       );
     } else {
-      items.push({
-        label: '$(globe) 1-Click Get Live Shareable Link',
-        description: 'Instant Cloudflare Quick Tunnel (Free, no account needed)',
-      });
+      items.push(
+        { label: '$(globe) Get Shareable Link', description: 'free, no account', command: 'launchwizard.startPreview' },
+        { label: pro('$(lock) Get Private Link (passcode)'), command: 'launchwizard.startPrivatePreview' },
+        { label: pro('$(link) Share on My Domain'), command: 'launchwizard.startCustomDomainPreview' }
+      );
     }
 
-    if (this.currentReport && this.currentReport.errors.length > 0) {
-      items.push({
-        label: '$(wand) Auto-Heal All Build Blockers',
-        description: `Apply safe 1-click fixes for ${this.currentReport.errors.length} issue(s)`,
-      });
-    }
+    items.push(
+      { label: 'Ship Safe', kind: vscode.QuickPickItemKind.Separator },
+      { label: pro('$(shield) Scan for Leaked Secrets'), command: 'launchwizard.scanSecrets' },
+      { label: pro('$(git-commit) Turn Pre-Push Gate On/Off'), command: 'launchwizard.togglePrePushGate' },
+      { label: pro('$(package) Check Dependency Health'), command: 'launchwizard.checkDependencies' },
+      { label: pro('$(rocket) Deploy (Vercel / Cloudflare Pages)'), command: 'launchwizard.deploy' },
+      { label: '$(layout-sidebar-left) Open LaunchWizard Sidebar', command: 'workbench.view.extension.launchwizard-deck' }
+    );
 
-    items.push({
-      label: '$(layout-sidebar-left) Open Pre-Flight Deck',
-      description: 'View full visual dashboard in sidebar',
-    });
-
-    const selected = await vscode.window.showQuickPick(items, {
-      placeHolder: 'LaunchWizard — The "Get It Live" Pre-Flight Engine',
-    });
-
-    if (!selected) return;
-
-    if (selected.label.includes('Run Pre-Flight')) {
-      await vscode.commands.executeCommand('launchwizard.runPreFlight');
-    } else if (selected.label.includes('Copy Live Tunnel Link')) {
-      await vscode.env.clipboard.writeText(tunnel.url);
-      vscode.window.showInformationMessage(`📋 Copied live tunnel URL: ${tunnel.url}`);
-    } else if (selected.label.includes('Show Mobile QR')) {
-      await vscode.commands.executeCommand('launchwizard.showMobileQr');
-    } else if (selected.label.includes('Stop Active Tunnel')) {
-      await vscode.commands.executeCommand('launchwizard.stopTunnel');
-    } else if (selected.label.includes('Get Live Shareable Link')) {
-      await vscode.commands.executeCommand('launchwizard.startTunnel');
-    } else if (selected.label.includes('Auto-Heal All')) {
-      await vscode.commands.executeCommand('launchwizard.autoHealAll');
-    } else if (selected.label.includes('Open Pre-Flight Deck')) {
-      await vscode.commands.executeCommand('workbench.view.extension.launchwizard-deck');
+    const selected = await vscode.window.showQuickPick(items, { placeHolder: 'LaunchWizard: get it live' });
+    if (selected?.command) {
+      await vscode.commands.executeCommand(selected.command, ...(selected.args ?? []));
     }
   }
 
   public dispose(): void {
-    this.statusBarItem.dispose();
+    TunnelManager.events.off('change', this.onTunnel);
+    this.subscription.dispose();
+    this.item.dispose();
   }
 }

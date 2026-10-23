@@ -1,163 +1,208 @@
 import * as crypto from 'node:crypto';
-import type { LicenseState, LicenseTier } from '../shared/types.js';
+import type { LicenseState } from '../shared/types.js';
 
+/** What the extension persists (in VS Code SecretStorage) between sessions. */
+export interface StoredLicense {
+  key: string;
+  machineIdHash: string;
+  activatedAt: number;
+  verifiedAt: number;
+  uses?: number;
+}
+
+export interface LicenseManagerOptions {
+  stored?: StoredLicense;
+  /** Raw machine identifier (vscode.env.machineId); only its hash is stored or compared. */
+  machineId: string;
+  fetchImpl?: typeof fetch;
+  now?: () => number;
+}
+
+export type RefreshOutcome = 'verified' | 'revoked' | 'offline' | 'none';
+
+interface GumroadVerifyResponse {
+  success: boolean;
+  uses?: number;
+  message?: string;
+  purchase?: { refunded?: boolean; chargebacked?: boolean; disputed?: boolean };
+}
+
+/**
+ * Pro licensing using only Gumroad's free license API. No server and no secrets in the extension.
+ * Any check that runs on the user's machine can be patched out; at $9.99 the goal is to keep
+ * honest users honest, not perfect DRM.
+ */
 export class LicenseManager {
-  private static readonly SALT = 'SHIPWIZARD_DR_OPENSOURCE_LIFETIME_SECRET_2026';
-  private static readonly PRODUCT_ID = '5jmErjhP_JXqeLXQtq5TgA==';
+  public static readonly PRODUCT_ID = '5jmErjhP_JXqeLXQtq5TgA==';
+  public static readonly MAX_MACHINES = 3;
+  public static readonly REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+  public static readonly GRACE_MS = 30 * 24 * 60 * 60 * 1000;
   private static readonly GUMROAD_VERIFY_ENDPOINT = 'https://api.gumroad.com/v2/licenses/verify';
 
-  private tier: LicenseTier = 'free';
-  private licenseKey?: string;
-  private activatedAt?: number;
+  private stored?: StoredLicense;
+  private readonly machineIdHash: string;
+  private readonly fetchImpl: typeof fetch;
+  private readonly now: () => number;
 
-  constructor(initialKey?: string) {
-    if (initialKey && this.validateKeyPattern(initialKey)) {
-      this.tier = 'pro';
-      this.licenseKey = initialKey;
-      this.activatedAt = Date.now();
+  constructor(options: LicenseManagerOptions) {
+    this.machineIdHash = LicenseManager.hashMachineId(options.machineId);
+    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.now = options.now ?? Date.now;
+    // A license stored on another machine (e.g. a synced profile) doesn't count here.
+    if (options.stored && options.stored.machineIdHash === this.machineIdHash) {
+      this.stored = options.stored;
     }
   }
 
-  /**
-   * Returns current license tier and activation status.
-   */
+  public static hashMachineId(machineId: string): string {
+    return crypto.createHash('sha256').update(`launchwizard:${machineId}`).digest('hex');
+  }
+
   public getStatus(): LicenseState {
+    if (!this.stored) {
+      return { tier: 'free', isActivated: false, maxMachines: LicenseManager.MAX_MACHINES, paused: false };
+    }
+    const graceEndsAt = this.stored.verifiedAt + LicenseManager.GRACE_MS;
+    const withinGrace = this.now() <= graceEndsAt;
     return {
-      tier: this.tier,
-      key: this.licenseKey,
-      isActivated: this.tier === 'pro',
-      activatedAt: this.activatedAt,
-      activeMachines: this.tier === 'pro' ? 1 : 0,
+      tier: withinGrace ? 'pro' : 'free',
+      isActivated: withinGrace,
+      key: LicenseManager.maskKey(this.stored.key),
+      activatedAt: this.stored.activatedAt,
+      lastVerifiedAt: this.stored.verifiedAt,
+      graceEndsAt,
+      uses: this.stored.uses,
+      maxMachines: LicenseManager.MAX_MACHINES,
+      paused: !withinGrace,
+    };
+  }
+
+  public isPro(): boolean {
+    return this.getStatus().tier === 'pro';
+  }
+
+  public toStored(): StoredLicense | undefined {
+    return this.stored ? { ...this.stored } : undefined;
+  }
+
+  public clear(): void {
+    this.stored = undefined;
+  }
+
+  /** True when a background re-check is due. */
+  public needsRefresh(): boolean {
+    return Boolean(this.stored) && this.now() - this.stored!.verifiedAt >= LicenseManager.REFRESH_INTERVAL_MS;
+  }
+
+  /**
+   * Activates a Gumroad key on this machine. Activation needs internet once; a new machine
+   * spends one of the key's 3 seats, while re-activating the same machine never does.
+   */
+  public async activateLicense(key: string): Promise<{ success: boolean; message: string }> {
+    const trimmed = key.trim();
+    if (!LicenseManager.isGumroadKeyFormat(trimmed)) {
+      return {
+        success: false,
+        message: 'That doesn\'t look like a LaunchWizard license key. Copy the key from your Gumroad receipt (format XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX).',
+      };
+    }
+
+    const sameMachineAgain = this.stored?.key === trimmed;
+
+    let check: GumroadVerifyResponse;
+    try {
+      check = await this.verify(trimmed, false);
+    } catch {
+      return { success: false, message: 'Could not reach Gumroad to check your key. Activation needs an internet connection once; please try again.' };
+    }
+
+    const problem = this.problemWith(check);
+    if (problem) {
+      return { success: false, message: problem };
+    }
+
+    let uses = check.uses;
+    if (!sameMachineAgain) {
+      if ((check.uses ?? 0) >= LicenseManager.MAX_MACHINES) {
+        return {
+          success: false,
+          message: `This key is already active on ${LicenseManager.MAX_MACHINES} machines. Remove it from one ("LaunchWizard: Remove License From This Machine") and email support to free the seat.`,
+        };
+      }
+      try {
+        const counted = await this.verify(trimmed, true);
+        uses = counted.uses ?? (check.uses ?? 0) + 1;
+      } catch {
+        return { success: false, message: 'Could not reach Gumroad to finish activation. Please try again.' };
+      }
+    }
+
+    const now = this.now();
+    this.stored = {
+      key: trimmed,
+      machineIdHash: this.machineIdHash,
+      activatedAt: sameMachineAgain && this.stored ? this.stored.activatedAt : now,
+      verifiedAt: now,
+      uses,
+    };
+    return {
+      success: true,
+      message: 'LaunchWizard Pro activated! Auto-fix on save, private links, Secret Leak Guard, Pre-Push Gate, deploy and the other Pro tools are now unlocked.',
     };
   }
 
   /**
-   * Activates a license key using offline checksum validation and online Gumroad verification.
+   * Re-checks the stored key without spending a seat. A refunded or revoked key downgrades to Free;
+   * a network failure keeps Pro until the grace period ends.
    */
-  public async activateLicense(key: string): Promise<{ success: boolean; message: string }> {
-    const trimmed = key.trim();
-
-    // 1. Format check: SHIP-PRO-XXXX-XXXX or Gumroad Key (8-8-8-8 or UUID)
-    if (!this.validateKeyPattern(trimmed)) {
-      return {
-        success: false,
-        message: 'Invalid license key format. Please provide a valid LaunchWizard Lifetime key.',
-      };
-    }
-
-    // 2. Offline cryptographic verification for SHIP-PRO format
-    if (trimmed.startsWith('SHIP-PRO-')) {
-      if (this.verifyCryptographicChecksum(trimmed)) {
-        this.tier = 'pro';
-        this.licenseKey = trimmed;
-        this.activatedAt = Date.now();
-        return {
-          success: true,
-          message: 'LaunchWizard Pro Lifetime activated successfully! Enjoy automated auto-healing and BYOK pipelines.',
-        };
-      }
-      return {
-        success: false,
-        message: 'License key failed cryptographic signature check.',
-      };
-    }
-
-    // 3. Online Gumroad API Verification
+  public async refresh(): Promise<RefreshOutcome> {
+    if (!this.stored) return 'none';
+    let check: GumroadVerifyResponse;
     try {
-      const response = await fetch(LicenseManager.GUMROAD_VERIFY_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          product_id: LicenseManager.PRODUCT_ID,
-          license_key: trimmed,
-        }),
-      });
-
-      const data = (await response.json()) as { success: boolean; uses?: number };
-
-      if (data.success) {
-        this.tier = 'pro';
-        this.licenseKey = trimmed;
-        this.activatedAt = Date.now();
-        return {
-          success: true,
-          message: 'LaunchWizard Pro Lifetime verified via Gumroad! All Pro features unlocked.',
-        };
-      }
-
-      return {
-        success: false,
-        message: 'Gumroad license key verification failed or key is expired/revoked.',
-      };
+      check = await this.verify(this.stored.key, false);
     } catch {
-      // Offline fallback: If network is offline, accept valid Gumroad key structure gracefully
-      if (this.isGumroadKeyFormat(trimmed)) {
-        this.tier = 'pro';
-        this.licenseKey = trimmed;
-        this.activatedAt = Date.now();
-        return {
-          success: true,
-          message: 'Pro license registered in offline mode. Welcome to LaunchWizard Pro!',
-        };
-      }
-
-      return {
-        success: false,
-        message: 'Could not connect to Gumroad license server. Check your connection or use an offline key.',
-      };
+      return 'offline';
     }
+    if (this.problemWith(check)) {
+      this.stored = undefined;
+      return 'revoked';
+    }
+    this.stored = { ...this.stored, verifiedAt: this.now(), uses: check.uses ?? this.stored.uses };
+    return 'verified';
   }
 
-  /**
-   * Validates key format (SHIP-PRO-XXXX-XXXX, Gumroad 8-8-8-8, or standard UUID).
-   */
-  public validateKeyPattern(key: string): boolean {
-    if (!key) return false;
-    const isShipKey = /^SHIP-PRO-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}$/i.test(key);
-    return isShipKey || this.isGumroadKeyFormat(key);
+  private problemWith(check: GumroadVerifyResponse): string | null {
+    if (!check.success) {
+      return 'Gumroad does not recognise this key for LaunchWizard. Check that you copied the whole key from your receipt.';
+    }
+    if (check.purchase?.refunded || check.purchase?.chargebacked || check.purchase?.disputed) {
+      return 'This purchase was refunded or disputed, so the key is no longer active.';
+    }
+    return null;
   }
 
-  /**
-   * Checks if string matches Gumroad license key formats (8-8-8-8 hex blocks or UUID).
-   */
-  public isGumroadKeyFormat(key: string): boolean {
+  private async verify(key: string, incrementUses: boolean): Promise<GumroadVerifyResponse> {
+    const response = await this.fetchImpl(LicenseManager.GUMROAD_VERIFY_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        product_id: LicenseManager.PRODUCT_ID,
+        license_key: key,
+        increment_uses_count: String(incrementUses),
+      }),
+    });
+    // Gumroad answers unknown keys with 404 and a JSON body; anything unparsable counts as offline.
+    return (await response.json()) as GumroadVerifyResponse;
+  }
+
+  public static isGumroadKeyFormat(key: string): boolean {
     if (!key) return false;
     const isGumroad8x4 = /^[a-f0-9]{8}-[a-f0-9]{8}-[a-f0-9]{8}-[a-f0-9]{8}$/i.test(key);
     const isUuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(key);
     return isGumroad8x4 || isUuid;
   }
 
-  /**
-   * Offline cryptographic checksum generation and verification.
-   */
-  private verifyCryptographicChecksum(key: string): boolean {
-    const parts = key.split('-');
-    if (parts.length !== 4) return false;
-    const payload = parts[2];
-    const signature = parts[3];
-
-    const expectedHash = crypto
-      .createHmac('sha256', LicenseManager.SALT)
-      .update(payload)
-      .digest('hex')
-      .slice(0, signature.length)
-      .toUpperCase();
-
-    return signature.toUpperCase() === expectedHash;
-  }
-
-  /**
-   * Helper utility to generate valid offline keys for tests and customer issuance.
-   */
-  public static generateOfflineKey(seed: string): string {
-    const payload = seed.toUpperCase().slice(0, 6).padEnd(6, 'X');
-    const signature = crypto
-      .createHmac('sha256', LicenseManager.SALT)
-      .update(payload)
-      .digest('hex')
-      .slice(0, 6)
-      .toUpperCase();
-
-    return `SHIP-PRO-${payload}-${signature}`;
+  public static maskKey(key: string): string {
+    return key.length > 8 ? `${key.slice(0, 4)}…${key.slice(-4)}` : '••••';
   }
 }

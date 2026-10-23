@@ -96,7 +96,7 @@ export class FrameworkDetector {
       return { framework: 'cra', displayName: 'Create React App', defaultPort: 3000, version: deps['react-scripts'] };
     }
     if (deps.typescript) {
-      return { framework: 'vanilla-ts', displayName: 'TypeScript Project', defaultPort: 3000, version: deps.typescript };
+      return { framework: 'vanilla-ts', displayName: 'TypeScript', defaultPort: 3000, version: deps.typescript };
     }
 
     return { framework: 'unknown', displayName: 'Generic Web App', defaultPort: 3000 };
